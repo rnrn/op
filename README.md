@@ -2,6 +2,20 @@
 
 Portable Claude Code and Codex skills, commands, agents, hooks, and project-method templates for operational development workflows.
 
+## Demo
+
+The op-* lifecycle in 25 seconds — preflight gate, checkpoint-first planning, and the completion-status protocol on a real project:
+
+[![op-* skills demo — click for the full-quality video](docs/demo/op-skills-preview.gif)](docs/demo/op-skills-web.mp4?raw=true)
+
+<!--
+For a true inline player on GitHub: open this README in the github.com web
+editor, drag docs/demo/op-skills-web.mp4 (0.6 MB, fits the 10 MB limit) into
+the editor, and replace the GIF block above with the generated
+https://github.com/user-attachments/assets/<uuid> URL on its own line.
+Repo-committed mp4 files do not render as a player inside README.
+-->
+
 ## Contents
 
 ### Skills (`skills/`)
