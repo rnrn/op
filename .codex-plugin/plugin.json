@@ -1,0 +1,42 @@
+{
+  "name": "crateon-bundle",
+  "version": "0.2.1",
+  "description": "Portable operational development workflow skills for project intake, planning, preflight, documentation closeout, decision memory, feedback harvesting, and drift/debt audits.",
+  "author": {
+    "name": "Crateon",
+    "url": "https://github.com/crateon-dev"
+  },
+  "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
+  "repository": "https://github.com/crateon-dev/crateon-bundle",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "skills",
+    "development-workflow",
+    "bmad",
+    "preflight",
+    "documentation",
+    "technical-debt",
+    "upstream"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Crateon Bundle",
+    "shortDescription": "Operational development workflow skills for Codex.",
+    "longDescription": "Portable skills for repeatable project onboarding, story discovery, planning, preflight checks, documentation closeout, decision capture, feedback harvesting, upstream research, and drift/debt audits.",
+    "developerName": "Crateon",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write",
+      "Research"
+    ],
+    "websiteURL": "https://github.com/crateon-dev/crateon-bundle",
+    "defaultPrompt": [
+      "Use op-tour to map this project before creating tasks.",
+      "Use op-preflight before implementing this change.",
+      "Use op-docup and op-decision-memory to close out the completed story."
+    ],
+    "brandColor": "#F97316"
+  }
+}

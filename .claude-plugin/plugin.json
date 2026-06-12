@@ -1,0 +1,26 @@
+{
+  "name": "crateon-bundle",
+  "version": "0.2.1",
+  "description": "Operational development workflow skills for project intake, planning, preflight, implementation closeout, decision memory, feedback harvesting, and drift/debt audits.",
+  "author": {
+    "name": "Crateon",
+    "url": "https://github.com/crateon-dev"
+  },
+  "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
+  "repository": "https://github.com/crateon-dev/crateon-bundle",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skills",
+    "development-workflow",
+    "bmad",
+    "preflight",
+    "documentation",
+    "technical-debt",
+    "upstream"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "hooks": "./hooks/"
+}

@@ -1,0 +1,145 @@
+{
+  "name": "crateon-bundle",
+  "owner": {
+    "name": "Crateon",
+    "url": "https://github.com/crateon-dev"
+  },
+  "metadata": {
+    "description": "A GitHub-installable Claude Code skill marketplace for operational development cycles: onboard, find existing work, plan, preflight, implement, update docs, capture decisions, harvest feedback, and audit drift/debt.",
+    "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
+    "repository": "https://github.com/crateon-dev/crateon-bundle",
+    "license": "MIT"
+  },
+  "plugins": [
+    {
+      "name": "operational-development-cycle",
+      "source": "./",
+      "description": "Daily development lifecycle skills. Install this group when a project needs a repeatable path from task intake to implementation closeout and periodic drift/debt review. Pair with documentation-kits when a full dated project documentation snapshot is needed.",
+      "version": "0.2.1",
+      "author": {
+        "name": "Crateon"
+      },
+      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "license": "MIT",
+      "keywords": [
+        "development-workflow",
+        "task-intake",
+        "preflight",
+        "documentation",
+        "decision-log",
+        "feedback",
+        "technical-debt"
+      ],
+      "category": "workflow",
+      "tags": [
+        "op-skills",
+        "bmad",
+        "project-lifecycle",
+        "preflight",
+        "docs",
+        "audit"
+      ],
+      "skills": [
+        "./skills/op-tour",
+        "./skills/op-story-finder",
+        "./skills/op-planner",
+        "./skills/op-preflight",
+        "./skills/op-docup",
+        "./skills/op-decision-memory",
+        "./skills/op-feedback-harvest",
+        "./skills/op-debt-scan",
+        "./skills/op-drift-check"
+      ],
+      "strict": false
+    },
+    {
+      "name": "git-release",
+      "source": "./",
+      "description": "Git and release hygiene skills for dry commit planning, baby-step commits, and changelog maintenance.",
+      "version": "0.2.1",
+      "author": {
+        "name": "Crateon"
+      },
+      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "license": "MIT",
+      "keywords": [
+        "git",
+        "commit",
+        "changelog",
+        "release"
+      ],
+      "category": "workflow",
+      "tags": [
+        "git",
+        "release",
+        "commit-planning"
+      ],
+      "skills": [
+        "./skills/baby-commit",
+        "./skills/dry-commit",
+        "./skills/changelog"
+      ],
+      "strict": false
+    },
+    {
+      "name": "upstream-research",
+      "source": "./",
+      "description": "Upstream repository research skills for harvesting commits, issues, pull requests, and cherry-pick candidates into project planning artifacts.",
+      "version": "0.2.1",
+      "author": {
+        "name": "Crateon"
+      },
+      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "license": "MIT",
+      "keywords": [
+        "upstream",
+        "github",
+        "issues",
+        "pull-requests",
+        "cherry-pick"
+      ],
+      "category": "research",
+      "tags": [
+        "upstream",
+        "github",
+        "harvest",
+        "integration"
+      ],
+      "skills": [
+        "./skills/upstream-harvest",
+        "./skills/upstream-cherry",
+        "./skills/upstream-issues"
+      ],
+      "strict": false
+    },
+    {
+      "name": "documentation-kits",
+      "source": "./",
+      "description": "Batch documentation snapshot skills for generating dated onboarding, architecture, integration, delivery-map, debt, and optional DOCX project documentation kits.",
+      "version": "0.2.1",
+      "author": {
+        "name": "Crateon"
+      },
+      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "license": "MIT",
+      "keywords": [
+        "documentation",
+        "architecture",
+        "onboarding",
+        "mermaid",
+        "docx"
+      ],
+      "category": "documentation",
+      "tags": [
+        "project-docs",
+        "architecture",
+        "onboarding",
+        "docx"
+      ],
+      "skills": [
+        "./skills/project-doc-kit"
+      ],
+      "strict": false
+    }
+  ]
+}

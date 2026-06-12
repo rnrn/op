@@ -1,0 +1,45 @@
+{
+  "name": "crateon-bundle",
+  "version": "0.2.1",
+  "private": false,
+  "description": "Portable Claude Code and Codex skill bundle for operational development workflows.",
+  "license": "MIT",
+  "author": {
+    "name": "Crateon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crateon-dev/crateon-bundle.git"
+  },
+  "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "skills",
+    "development-workflow",
+    "bmad",
+    "preflight",
+    "documentation",
+    "technical-debt",
+    "upstream"
+  ],
+  "scripts": {
+    "validate": "node scripts/scan-secrets.js && node scripts/validate-skills.js && node scripts/validate-marketplace.js && node scripts/validate-project-method-templates.js"
+  },
+  "files": [
+    "skills/",
+    "commands/",
+    "agents/",
+    "hooks/",
+    "templates/",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    "scripts/",
+    "README.md",
+    "INSTALL.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "claudePlugin": ".claude-plugin/plugin.json",
+  "codexPlugin": ".codex-plugin/plugin.json"
+}
