@@ -3,7 +3,8 @@
 ## Duplicate detection procedure
 
 Before assigning `APPLY`, compare each candidate against existing
-`docs/feedback/*.md` rules:
+`docs/feedback/*.md` rules **and** against the project's source-of-truth docs
+(`docs/**/architecture.md`, `design.md`, `docs/HANDBOOK.md`, `baseline.md`):
 
 1. Search the target file and nearby rule files for the same nouns and verbs.
 2. Check whether an existing rule already covers the same trigger, invariant,
@@ -12,10 +13,14 @@ Before assigning `APPLY`, compare each candidate against existing
    - `Status: DUPLICATE`
    - `Duplicate of: <file>#<rule-id>`
    - `Reason: <what existing rule already prevents>`
-4. If the new candidate is narrower or stronger, mark `APPLY` only when it
+4. If the rule restates an invariant a source-of-truth doc already owns,
+   keep it as `Origin: design-invariant` in **pointer-form** ("follow
+   `<doc>#<rule>`") instead of copying the prose — copies are how the two
+   documents silently drift apart.
+5. If the new candidate is narrower or stronger, mark `APPLY` only when it
    adds a distinct check or updates the existing rule instead of creating a
    parallel rule.
-5. If unsure, mark `WATCH`, not `APPLY`.
+6. If unsure, mark `WATCH`, not `APPLY`.
 
 Examples:
 

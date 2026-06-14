@@ -41,6 +41,7 @@ confirm before applying any of them.
 3. **Analyze actual code:** dependency manifests (`go.mod`, `package.json`, `requirements.txt`/`pyproject.toml`, `Cargo.toml`, `pom.xml`/`build.gradle`, `*.csproj`, `composer.json`, `Gemfile` — an open set: use whatever the project's stack provides); the actual archetype surfaces from step 2 (routes/handlers and migrations/models for services, screen/command registrations for GUI/CLI, stage/config definitions for pipelines, exported API for libraries); actual file structure vs documented; duplicate command paths, compatibility wrappers, legacy docs linked from active guides, and settings written from multiple sources.
 4. **Verify each claim against the code** and check the code for undocumented features.
    - **Dead-public-surface check:** a symbol, module, or feature exported from a package/feature index that nothing else in the codebase references is at least an INFO finding; raise to WARNING when the docs require it to be mounted or used.
+   - **Doc-vs-doc duplication check:** a `docs/feedback` rule (or any active doc) that *restates* an invariant already owned by a source-of-truth doc, rather than pointing to it, is an INFO finding — two prose copies of one rule are a latent drift source; recommend collapsing the restatement to a pointer.
 5. **Classify each finding:**
 
    | Severity | Meaning | Example |
@@ -69,6 +70,7 @@ confirm before applying any of them.
 - [endpoint] POST /api/webhooks exists in code but not documented
 - [dependency] github.com/redis/go-redis in go.mod but not in architecture doc
 - [source-of-truth] provider timeout is documented in two active guides with different owners
+- [doc-duplication] docs/feedback/frontend.md restates the routes-centralized invariant already owned by architecture.md — collapse to a pointer
 
 ### Summary
 - Critical: 2 | Warning: 2 | Info: 3

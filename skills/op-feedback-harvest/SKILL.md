@@ -36,13 +36,13 @@ No range given -> commits since the latest commit that touched `docs/feedback`; 
    - **Declared rule sources are first-class candidates too:** `AGENTS.md`, `CLAUDE.md` critical-rules / review-checklist sections, and lesson entries in project CHANGELOGs. Cite the source file per rule. This matters most on a fresh scaffold, where the project's real rules predate `docs/feedback` and live in the agent contract — exactly the case `op-preflight` flags as template-only.
 5. Inspect only bounded evidence per candidate: commit subject/body, changed file names, targeted diff hunks, referenced story/epic notes.
 6. Extract durable rules, not change summaries. Good: "When CLI flags override saved config, persist the resolved runtime endpoint before launching the client." Bad: "Fixed bug in commit abc123."
-7. Map each rule to an existing feedback file, or propose a narrow new one; run duplicate detection against current `docs/feedback/*.md` — procedure, examples, and the file-mapping table are in `references/rules-guide.md`.
+7. Place each rule before mapping it. First decide whether it is a **design invariant already owned by a source-of-truth doc** (`docs/**/architecture.md`, `design.md`, `docs/HANDBOOK.md`, `baseline.md`): if so, the feedback rule must be **pointer-form** ("follow `<doc>#<rule>`"), never a restatement that can later drift; if the invariant belongs upstream but is missing there, route it to that doc (or flag it in Open Questions), not only into feedback. Only genuinely incident-born rules get a full checklist entry in `docs/feedback`. Then map the rule to an existing feedback file or propose a narrow new one, and run duplicate detection against current `docs/feedback/*.md` (and against the source-of-truth docs above) — procedure, examples, and the file-mapping table are in `references/rules-guide.md`.
 8. Write the audit checkpoint (shape under Output) with commit range, selected/rejected commits, proposed rules, duplicate matches, target files, and unresolved questions.
 9. With `--apply`: re-run duplicate detection; update `docs/feedback` files and `index.md` selector entries only for non-duplicate `APPLY` rules (never `DUPLICATE`/`WATCH`/`REJECT`); keep rules checklist-oriented and project-local; run the apply-mode validation in `references/rules-guide.md`.
 
 ## Rule Quality Bar
 
-Promote a candidate only when it is durable (prevents future regressions), actionable (checkable by `op-preflight`), project-local, non-duplicative, and tied to a test, command, incident, bug, or documented operator path. Useful but not ready -> keep it in the checkpoint as `WATCH`, not as a rule. Already covered -> mark `DUPLICATE`, name the existing rule id/file, do not apply.
+Promote a candidate only when it is durable (prevents future regressions), actionable (checkable by `op-preflight`), project-local, non-duplicative (of other feedback rules **and** of invariants already owned by a source-of-truth doc — those become pointer-form, see step 7), and tied to a test, command, incident, bug, or documented operator path. Useful but not ready -> keep it in the checkpoint as `WATCH`, not as a rule. Already covered -> mark `DUPLICATE`, name the existing rule id/file, do not apply.
 
 ## Output
 
@@ -68,7 +68,8 @@ Mode: checkpoint | apply
 
 ### <target feedback file>
 
-- Rule: <durable checklist rule>
+- Rule: <durable checklist rule, or pointer to the owning source-of-truth doc>
+- Origin: incident (<commit/date>) | design-invariant (owner: <doc>) | imported-baseline
 - Evidence: <commit/test/story reference>
 - Status: APPLY | WATCH | DUPLICATE | REJECT
 - Duplicate of: <file>#<rule-id> when status is DUPLICATE
