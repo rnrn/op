@@ -122,9 +122,13 @@ Create epic files in `docs/<track>/epics/epic-N-name.md`:
 - [ ] Documentation updated
 ```
 
-## Sprint YAML Update
+## Sprint / Board Update (optional)
 
-After creating a story, update `.taskmaster/sprints/sprint-N.yaml` if it exists:
+The bundle does not own or scaffold a sprint/board file. Only when the project
+already tracks one — update it after creating a story, using the path the
+project declares (in `AGENTS.md` / `docs/HANDBOOK.md`; e.g. an external tool
+such as `.taskmaster/sprints/sprint-N.yaml`). Skip this step entirely when the
+project has no such file:
 
 ```yaml
 epics:

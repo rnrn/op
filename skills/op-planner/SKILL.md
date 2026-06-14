@@ -54,8 +54,9 @@ create, modify, or delete anything else unless the user explicitly passed
 6. **Write `PLANNER_CHECKPOINT.md`** — required sections listed under Output;
    keep it under 140 lines.
 7. **Apply gate** — only if the user explicitly passed `--apply` in the same
-   request: write the real story file, update the epic story table, and
-   update the sprint YAML, using the templates in `references/templates.md`.
+   request: write the real story file, update the epic story table, and —
+   only when the project already tracks a sprint/board file — update it,
+   using the templates in `references/templates.md`.
    When materializing or updating an epic file and the project provides an
    epic-closure-checklist template (`docs/*/epics/epic-closure-checklist.md`
    or a path declared in `docs/HANDBOOK.md`), include its
@@ -100,7 +101,8 @@ written.
    with ACs such as "Returns 429 status when rate limit exceeded", and an
    apply gate reading "no real files written (no --apply)".
 4. With `--apply`: create story-2.3.md, add its row to epic-2-security.md,
-   update the sprint YAML, and report what was created.
+   update the project's sprint/board file if it uses one, and report what was
+   created.
 
 ## Completion Status
 
