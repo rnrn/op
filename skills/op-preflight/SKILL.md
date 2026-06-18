@@ -14,7 +14,9 @@ Run before any non-trivial implementation, migration, refactor, docs/workflow/sk
 This skill writes nothing by default; the preflight report goes to the
 conversation only. The single permitted write is bootstrapping the feedback
 scaffold files (listed in `references/scaffold.md`), and only when the user
-explicitly asks for the scaffold in the same request.
+explicitly asks for the scaffold in the same request. Never run `git add`,
+`git commit`, or `git reset` — staging and commits belong to the user or the
+`baby-commit`/`dry-commit` skills.
 
 ## Usage
 

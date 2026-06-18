@@ -16,7 +16,9 @@ report only. Do not create, modify, or delete anything unless the user
 explicitly passed `--apply` in the same request. With `--apply`, append the
 accepted decisions to `docs/decisions/decisions.yaml` (and regenerate
 `docs/decisions/DECISIONS.md` when `--export` is also given) and touch
-nothing else.
+nothing else. Write files only — never run `git add`, `git commit`, or
+`git reset`; staging and commits belong to the user or the `baby-commit`/
+`dry-commit` skills.
 
 ## Usage
 

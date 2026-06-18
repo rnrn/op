@@ -14,7 +14,9 @@ Convert recent project history into durable `docs/feedback` rules for `op-prefli
 Default mode writes only `docs/feedback/audits/op-feedback-harvest-YYYYMMDD-HHMM.md`
 in the workspace. Do not create, modify, or delete anything else unless the
 user explicitly passed `--apply` (or clearly said to apply/update rules) in
-the same request.
+the same request. Write files only — never run `git add`, `git commit`, or
+`git reset`; staging and commits belong to the user or the `baby-commit`/
+`dry-commit` skills.
 
 Never store secrets, API keys, tokens, passphrases, proxy credentials, or raw logs in feedback. Redact command output and error payloads to the smallest evidence needed.
 

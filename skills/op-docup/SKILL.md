@@ -16,7 +16,10 @@ checkpoint file first; real documentation is modified only on explicit apply.
 
 Default mode writes only `DOCUP_CHECKPOINT.md` in the workspace. Do not
 create, modify, or delete anything else unless the user explicitly passed
-`--apply` in the same request.
+`--apply` in the same request. Write files only — never run `git add`,
+`git commit`, or `git reset`; staging and commits belong to the user or the
+`baby-commit`/`dry-commit` skills (an agent that auto-commits can corrupt a
+detached worktree and strand later steps).
 
 ## Usage
 
