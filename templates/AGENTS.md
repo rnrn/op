@@ -59,13 +59,23 @@ Before non-trivial implementation, docs workflow changes, agent behavior changes
 
 Every change must end with a concrete proof command or evidence file. If validation is unavailable, record the blocker and do not mark the task complete.
 
+## Git boundary
+
+Skills and agents **write files; they do not stage or commit.** Never run `git add`, `git commit`, or `git reset` from a skill run — staging and commits belong to the user, or to the dedicated `baby-commit` / `dry-commit` skills invoked explicitly. (An agent that auto-commits — common with `--dangerously-skip-permissions` — can corrupt a detached worktree and strand later steps.)
+
 ## Epic Closure Gate
 
-Before an epic's status flips to DONE, all of the following are mandatory:
+Before an epic's status flips to DONE, run these **in order** — the steps are a
+sequence, not an unordered set, because drift-check detects what docup fixes:
 
-1. `op-drift-check` scoped to the docs the epic touched — no unresolved CRITICAL/WARNING findings.
-2. `op-docup --epic <id> --apply` — the epic's stories and the architecture doc agree with the code; the run did not end `DONE_WITH_CONCERNS`/`BLOCKED`.
-3. `op-decision-memory` — durable decisions from the epic proposed, accepted ones appended with `--apply`.
+1. `op-drift-check` scoped to the docs the epic touched — detect divergences.
+2. If it reported CRITICAL/WARNING: `op-docup --epic <id> --apply` to reconcile
+   stories/architecture with the code, then re-run `op-drift-check`. Repeat until
+   it reports no CRITICAL/WARNING (cap ~3 iterations; if still failing, the epic
+   is `BLOCKED` — fix the code/doc divergence, do not close).
+3. `op-decision-memory` **last** — once docs are settled, propose the epic's
+   durable decisions and append accepted ones with `--apply` (recording
+   decisions before docup reconciles the docs risks capturing a stale rationale).
 4. The epic file's `## Closure Checklist` section is fully checked.
 
 An epic without a completed gate stays in `review`, not `done`.

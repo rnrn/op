@@ -53,5 +53,5 @@ Three review levels keep docs, debt, and decisions from drifting between skill r
 | Level | When | Required |
 |---|---|---|
 | Story | every story | proof command + mechanical gates declared by this project |
-| Epic closure | epic flips to DONE | Epic Closure Gate: `op-drift-check`, `op-docup --epic <id> --apply`, `op-decision-memory`, epic's `## Closure Checklist` |
+| Epic closure | epic flips to DONE | Epic Closure Gate (ordered): `op-drift-check` → `op-docup --epic <id> --apply` → re-check until clean → `op-decision-memory` last → epic's `## Closure Checklist` |
 | Background | monthly or every ~10 closed stories | `op-debt-scan` + `op-drift-check` |
