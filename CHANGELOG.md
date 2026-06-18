@@ -6,6 +6,11 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-18
+
+### Added
+- `op-docup` **sweep mode** (`--sweep`, also auto-detected on large change sets) — a resumable, segment-bounded doc-sync pass. Scope-freeze (names-only) writes a durable plan-file (`docs/.docup/sweep-state.json`); a sequential per-segment pass bounds context to one track at a time and persists progress after each segment, so a timeout/interruption resumes instead of restarting; a final merge reconciles indexes once. Portable (no subagent tool required); subagent fan-out is an optional accelerator. Default single-pass behavior unchanged for small repos (no regression). Completion-status protocol untouched — a partial pass uses the existing `DONE_WITH_CONCERNS` token with the remaining count carried in the plan-file. Mechanics in `skills/op-docup/references/sweep.md`. **Replace the Workflow/Usage/description sections; protocol section is byte-identical.**
+
 ## [0.3.0] - 2026-06-18
 
 ### Added
