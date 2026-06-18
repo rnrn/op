@@ -1,6 +1,6 @@
 ---
 name: op-docup
-description: Syncs recent code changes with BMAD project documentation, starting from a sync checkpoint. Use when code changed and docs need updating, after implementing a feature or fix, to map commits to stories and epics, or to verify docs before closing an epic (--epic). Default mode writes only DOCUP_CHECKPOINT.md; real doc updates require --apply.
+description: Syncs recent code changes with BMAD project documentation, starting from a sync checkpoint. Use when code changed and docs need updating, after implementing a feature or fix, to map commits to stories and epics, or to verify docs before closing an epic (--epic). Default mode writes only DOCUP_CHECKPOINT.md; real doc updates require --apply. For a large change set spanning many tracks, --sweep (also auto-detected) runs a resumable, segment-bounded pass that survives interruption and continues where it left off on re-run.
 metadata:
   safety-class: checkpoint
 ---
@@ -30,7 +30,11 @@ detached worktree and strand later steps).
 /op-docup --track=NAME     # Limit to one documentation track
 /op-docup --epic=ID        # Epic-closure mode: sync scoped to that epic's stories
 /op-docup --apply          # Checkpoint, then update/create real docs
+/op-docup --sweep --apply  # Large change set: resumable, segment-bounded pass
 ```
+
+Sweep auto-engages on large change sets and resumes automatically if a prior
+sweep was interrupted (see "Sweep mode" below).
 
 **Epic-closure mode (`--epic=<id>`):** scope the analysis to the commits and
 stories belonging to that epic. The epic may be declared synced only when the
@@ -80,6 +84,52 @@ report the epic as synced. Projects that define an Epic Closure Gate in
    Otherwise state in the checkpoint that no real docs were written.
 
 Read `references/templates.md` when applying (BMAD story-update template).
+
+## Sweep mode (large change sets, resumable)
+
+A single-context pass over a large change set blows tokens and is all-or-nothing
+(one timeout loses everything). Sweep **bounds context per segment** and
+externalizes progress to a durable plan-file, so an interrupted run **resumes
+instead of restarting**. Read `references/sweep.md` for the plan-file schema and
+the loop recipe.
+
+**Trigger.** The default single-pass Workflow above stays for small changes — no
+regression. Sweep engages on `--sweep`, or auto when changed top-level segments
+> 2 or touched files > 30 (override the threshold in the `AGENTS.md` Stack
+Profile).
+
+**Resume first (every invocation).** Before anything else, look for
+`docs/.docup/sweep-state.json`. If it exists with `status` ≠ `complete`,
+**resume**: skip scope-freeze and continue from the first `pending` task. Absent
+→ start at Phase 1.
+
+1. **Scope-freeze (cheap, names-only).** From `git diff --stat <since>..HEAD`
+   derive the changed segments (tracks) and, per segment, its changed files +
+   commit shas + that track's story/epic **names**. Do NOT read doc bodies or
+   full diffs here. Flag segments that touch shared indexes/taxonomy. Write one
+   `pending` task per segment plus a final `merge` task into
+   `docs/.docup/sweep-state.json`.
+2. **Per-segment pass (sequential, bounded).** Walk `pending` tasks one at a
+   time. Each task sees **only its segment scope** (that track's commits + named
+   docs; fetch bodies on demand) — run Workflow steps 2–5 scoped to that
+   segment, and on `--apply` write only that track's stories/epics. Mark the
+   task `done` and **persist the plan-file before the next task**. If you near a
+   context/turn budget with tasks still `pending`, **stop** and end with
+   `DONE_WITH_CONCERNS` whose reason names `X/Y segments synced, Z pending —
+   re-run op-docup --apply to continue` (no new status token; the count lives in
+   the plan-file and a re-run resumes).
+3. **Merge (once, when all segment tasks are `done`).** Read the compact
+   per-segment summaries from the plan-file (NOT the corpus); reconcile
+   `docs/INDEX.md`/taxonomy once; enforce single source of truth (cross-segment
+   dedup — never document the same thing in two tracks). Set `merge.status` and
+   top-level `status: complete`, write the final `DOCUP_CHECKPOINT.md`, end
+   `DONE`.
+
+Per-segment budget target ≤ ~50–80k tokens; total scales with Σ segments, not
+the product. Skills write files only — never commit (a resumed or interrupted
+run must not strand a worktree). Where the host provides a Workflow/Task tool,
+segments MAY be dispatched to subagents for parallel speed; the sequential pass
+above is the portable default and the correctness baseline.
 
 ## Output
 
