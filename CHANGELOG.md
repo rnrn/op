@@ -6,6 +6,14 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-19
+
+### Added
+- `op-docup` sweep **deterministic segmentation** (rev-3) — new `skills/op-docup/scripts/segment.js` classifies changed files to documentation tracks by a FIXED precedence (declared `docs/.docup/trackmap.json` → reverse-index from existing stories'/epics' "Files Modified" citations → persistent rubric index `docs/.docup/rubrics.json` → existing `docs/<track>/` name → structural default for source code; config/scaffold skipped). The segment set is now **identical across runs and models** — fixes the model-dependent-segmentation drift recorded in the benchmark (deepseek 5 / kimi 2 / Opus 3 → one deterministic decomposition). Metadata-only (paths/subjects/`--stat`), so input stays cheap and corpus-independent; the rubric index self-feeds from op-docup's own "Files Modified" writes and converges; `--batch=N` (or Stack Profile) sub-batches a heavy segment for weak models (pass count tracks segment count, not commit count). Phase-1 scope-freeze runs the segmenter, with a prose longest-prefix fallback when node is unavailable. Completion-status protocol byte-identical. **Replace the Sweep section + add `scripts/segment.js`; protocol unchanged.**
+
+### Added (earlier in this cycle)
+- `docs/reports/2026-06-19-op-docup-sweep-benchmark.md` — A/B benchmark ledger comparing the new sweep `op-docup` (0.4.0 Tier-2, 0.5.0 Tier-1) against the old single-context version. Records the validated runs (deepseek Tier-2: bounded, 0 provider errors vs the old 524k-token + 503-breaker baseline; kimi-highspeed Tier-2: completed end-to-end in ~9 min with a real index-reconciling merge, 0 errors; kimi-regular Tier-2: impractically slow — 2 docs in ~40 min, no segment completed, stalled, confirming highspeed as the sweep driver; Opus Tier-1: 3 parallel segments, 113 s, ~44k tokens/segment, complete), the model-dependent-segmentation caveat (variance even within the kimi family), and the recipe for a fully controlled same-model A/B.
+
 ## [0.5.0] - 2026-06-19
 
 ### Added
