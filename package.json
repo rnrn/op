@@ -1,6 +1,6 @@
 {
   "name": "crateon-bundle",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": false,
   "description": "Portable Claude Code and Codex skill bundle for operational development workflows.",
   "license": "MIT",

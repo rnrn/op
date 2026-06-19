@@ -6,6 +6,11 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-19
+
+### Added
+- `op-docup` sweep **Tier-1 subagent fan-out** (`skills/op-docup/scripts/sweep-workflow.js`) — the accelerator half of the sweep mode. Where the host exposes the Workflow tool, the frozen segments are dispatched one bounded doc-sync agent per documentation track (each writes only its own `docs/<track>/` and returns a compact summary), for true within-run context offload + parallelism; falls back to sequential `Task` agents, then to the Tier-2 sequential pass. Parallel-safe without worktree isolation (distinct track dirs); the skill still owns the single cross-segment merge and the durable plan-file, so Tier-1 and Tier-2 are interchangeable and resumable. `op-docup` frontmatter gains `allowed-tools` (adds `Workflow`, `Task`). Completion-status protocol untouched. **Replace the Workflow/Sweep sections + add `scripts/sweep-workflow.js`; protocol section byte-identical.**
+
 ## [0.4.0] - 2026-06-18
 
 ### Added
