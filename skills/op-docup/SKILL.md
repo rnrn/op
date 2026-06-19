@@ -148,7 +148,12 @@ Per-segment budget target ≤ ~50–80k tokens; total scales with Σ segments, n
 the product. On a weak model, declare a per-pass commit cap (Stack Profile or
 `--batch=N`): a heavy segment processes N commits per sub-pass and persists the
 plan-file between them, so input stays small and the run resumes — pass count
-tracks segment count, not commit count. Skills write files only — never commit (a
+tracks segment count, not commit count. For a model that stalls even within one
+segment, drive completion externally with `scripts/sweep-driver.mjs` — it runs
+**one segment per fresh model invocation** over the plan-file (host command given
+via `--cmd`), is robust to status-lag (marks a segment done from the docs it
+wrote), and retries/advances on a stall; this is the reliable cross-model way to
+reach `complete`. Skills write files only — never commit (a
 resumed or interrupted run must not strand a worktree). Tier-1 parallelism is safe
 without worktree isolation because each segment owns a distinct `docs/<track>/`
 dir and must not touch the shared indexes the merge phase reconciles.

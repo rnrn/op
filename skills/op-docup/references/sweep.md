@@ -189,3 +189,30 @@ for `isolation: 'worktree'`.
 (or simply stays `pending` if never dispatched) → the next invocation re-runs
 only those. Folding results into the plan-file before merge keeps Tier-1 and
 Tier-2 interchangeable across re-runs.
+
+## Driver loop (reliable completion on stall-prone / weak models)
+
+`--batch` is advisory — a slow model may ignore it or stall mid-segment. The
+**hard, cross-model** completion mechanism is `scripts/sweep-driver.mjs`: an
+*external* loop that re-invokes the model **once per segment** over the
+plan-file, so each invocation gets a fresh, bounded context and cannot stall on
+accumulated state.
+
+```
+node <skill dir>/scripts/sweep-driver.mjs --root <repo> --since <base> --head HEAD \
+  --cmd '<host invocation template with {ROOT} {PROMPT} {TO}>' [--per-call 1] [--to 600]
+```
+- Host-agnostic: you supply `--cmd` (the driver substitutes `{ROOT}` `{PROMPT}`
+  `{TO}`). Example (kimi via the claude client):
+  `cd {ROOT} && timeout {TO} crt ask claude --key KIMI_API --model kimi-k2.7-code --timeout {TO} {ROOT} "$(cat {PROMPT})" -- --dangerously-skip-permissions`
+- It runs `segment.js` first (deterministic scope-freeze), then loops: scoped
+  prompt for one `pending` segment → invoke → mark `done`. **Robust to
+  status-lag** — if the model wrote the segment's docs but forgot to mark it, the
+  driver marks it from the docs that appeared; a clean no-write call → no-docs;
+  an errored/timed-out call → retry once, then `blocked` (never an infinite loop).
+- Finishes with one bounded **merge** call, sets `status: complete`, exits 0.
+
+Empirically this rescues a model that stalls under Tier-2: regular kimi (which
+never finished a 20- or 6-commit sweep in one invocation) completed all 5
+segments + merge across 6 bounded driver calls. Use it for weak/slow lanes; for
+fast lanes Tier-2 in one invocation or Tier-1 fan-out is simpler.
