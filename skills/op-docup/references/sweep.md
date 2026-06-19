@@ -128,11 +128,43 @@ real context offload happens.
 - Write files only — never `git add`/`commit`/`reset`. An interrupted or resumed
   run must never strand a detached worktree.
 
-## Tier-1 accelerator (optional, follow-up — not the MVP)
+## Tier-1 accelerator (subagent fan-out)
 
-Where the host exposes a Workflow/Task tool, the `pending` tasks of Phase 2 MAY
-be dispatched to subagents (one segment each, in its own context, returning the
-compact `result` summary) for true within-run offload + parallelism. It writes
-the SAME plan-file, so it is interchangeable with and falls back to the
-sequential pass. The sequential Tier-2 pass remains the portable default and the
-correctness baseline; do not require the tool.
+Where the host exposes a Workflow/Task tool, dispatch the `pending` segments to
+subagents — one per track, each in its OWN context — for true within-run context
+offload + parallelism. The engine ships as `scripts/sweep-workflow.js`.
+
+**Invoke (preferred):** the Workflow tool with
+`scriptPath = <skill dir>/scripts/sweep-workflow.js` and
+
+```jsonc
+args = {
+  root: "<repo absolute path>", since: "<base sha>", head: "<sha>",
+  apply: true,                         // mirror op-docup --apply
+  segments: [ /* the plan-file's pending tasks: {id, segment, scope} */ ]
+}
+```
+
+It returns `{ segments: [{ id, segment, status, wrote[], summary, notes }] }`.
+Each segment agent reads ONLY its track's commits + named docs, writes ONLY that
+track's stories/epics (on apply), and returns a 2-3 line summary. Fold every
+returned item back into the plan-file (`status: done`, `result`), then run
+**Phase 3 merge exactly as in Tier-2** — the engine does NOT reconcile indexes;
+the skill still owns the single cross-segment merge using the returned summaries.
+
+**Parallel-safe without worktree isolation.** Each segment owns a distinct
+`docs/<track>/` dir and is forbidden from touching `docs/INDEX.md` / taxonomy
+(merge owns those), so concurrent agents never write the same file. Do not pay
+for `isolation: 'worktree'`.
+
+**Fallbacks (capability ladder).**
+- Workflow tool present → run the engine (parallel).
+- Only a `Task`/subagent tool present → spawn the same per-segment prompt as
+  sequential `Task` agents (the engine's `perSegmentPrompt` is the contract).
+- Neither → Tier-2 sequential. **This is the correctness baseline and the
+  portable default; never require the tool.**
+
+**Resume still holds.** A segment whose agent died comes back `status: blocked`
+(or simply stays `pending` if never dispatched) → the next invocation re-runs
+only those. Folding results into the plan-file before merge keeps Tier-1 and
+Tier-2 interchangeable across re-runs.

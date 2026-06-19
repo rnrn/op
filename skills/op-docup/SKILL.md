@@ -3,6 +3,7 @@ name: op-docup
 description: Syncs recent code changes with BMAD project documentation, starting from a sync checkpoint. Use when code changed and docs need updating, after implementing a feature or fix, to map commits to stories and epics, or to verify docs before closing an epic (--epic). Default mode writes only DOCUP_CHECKPOINT.md; real doc updates require --apply. For a large change set spanning many tracks, --sweep (also auto-detected) runs a resumable, segment-bounded pass that survives interruption and continues where it left off on re-run.
 metadata:
   safety-class: checkpoint
+allowed-tools: Read, Grep, Glob, Bash, Write, Edit, Workflow, Task
 ---
 
 # DocUp Skill
@@ -109,15 +110,27 @@ Profile).
    full diffs here. Flag segments that touch shared indexes/taxonomy. Write one
    `pending` task per segment plus a final `merge` task into
    `docs/.docup/sweep-state.json`.
-2. **Per-segment pass (sequential, bounded).** Walk `pending` tasks one at a
-   time. Each task sees **only its segment scope** (that track's commits + named
-   docs; fetch bodies on demand) — run Workflow steps 2–5 scoped to that
-   segment, and on `--apply` write only that track's stories/epics. Mark the
-   task `done` and **persist the plan-file before the next task**. If you near a
-   context/turn budget with tasks still `pending`, **stop** and end with
-   `DONE_WITH_CONCERNS` whose reason names `X/Y segments synced, Z pending —
-   re-run op-docup --apply to continue` (no new status token; the count lives in
-   the plan-file and a re-run resumes).
+2. **Per-segment execution.** Prefer Tier-1 fan-out when the host has it; else
+   the Tier-2 sequential baseline. Both write the SAME plan-file, so they are
+   interchangeable and resumable.
+   - **Tier-1 (accelerator — parallel, bounded).** Invoke the **Workflow** tool
+     with `scriptPath = <this skill dir>/scripts/sweep-workflow.js` and
+     `args = { root, since, head, apply, segments }` (the `pending` tasks). It
+     dispatches one bounded doc-sync agent per segment — each writes only its
+     own track and returns a compact summary — and returns
+     `{ segments:[{id,segment,status,wrote,summary,notes}] }`. Fold each result
+     into the plan-file (`status: done`, `result`). If the Workflow tool is
+     unavailable, spawn the same per-segment work as sequential `Task` agents;
+     if neither exists, fall through to Tier-2.
+   - **Tier-2 (portable baseline — sequential).** Walk `pending` tasks one at a
+     time. Each task sees **only its segment scope** (that track's commits +
+     named docs; fetch bodies on demand) — run Workflow steps 2–5 scoped to that
+     segment, and on `--apply` write only that track's stories/epics. Mark the
+     task `done` and **persist the plan-file before the next task**.
+   Either way, if tasks remain `pending` (budget reached, or an agent died),
+   **stop** and end with `DONE_WITH_CONCERNS` whose reason names `X/Y segments
+   synced, Z pending — re-run op-docup --apply to continue` (no new status token;
+   the count lives in the plan-file and a re-run resumes).
 3. **Merge (once, when all segment tasks are `done`).** Read the compact
    per-segment summaries from the plan-file (NOT the corpus); reconcile
    `docs/INDEX.md`/taxonomy once; enforce single source of truth (cross-segment
@@ -127,9 +140,9 @@ Profile).
 
 Per-segment budget target ≤ ~50–80k tokens; total scales with Σ segments, not
 the product. Skills write files only — never commit (a resumed or interrupted
-run must not strand a worktree). Where the host provides a Workflow/Task tool,
-segments MAY be dispatched to subagents for parallel speed; the sequential pass
-above is the portable default and the correctness baseline.
+run must not strand a worktree). Tier-1 parallelism is safe without worktree
+isolation because each segment owns a distinct `docs/<track>/` dir and must not
+touch the shared indexes the merge phase reconciles.
 
 ## Output
 
