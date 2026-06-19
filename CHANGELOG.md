@@ -6,6 +6,11 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-19
+
+### Added
+- `op-docup` sweep **driver loop** — new `skills/op-docup/scripts/sweep-driver.mjs`, the hard cross-model completion mechanism for stall-prone / weak models. It re-invokes the model **one segment per fresh invocation** over the resumable plan-file (host command supplied via `--cmd` with `{ROOT}`/`{PROMPT}`/`{TO}` placeholders — host-agnostic), runs `segment.js` for the deterministic scope-freeze first, is **robust to status-lag** (marks a segment done from the docs it actually wrote, not the model's self-report), and retries-then-advances on a stall (never an infinite loop) before a bounded merge call. Makes `--batch` a hard guarantee instead of advisory. Empirically: regular kimi — which never finished a 20- or 6-commit sweep in a single invocation (stalled) — completed all 5 segments + merge across 6 bounded driver calls (`status: complete`). Repo/ops mechanism; the skill body just points to it. Completion-status protocol byte-identical.
+
 ## [0.6.0] - 2026-06-19
 
 ### Added
