@@ -47,25 +47,46 @@ Path: `docs/.docup/sweep-state.json`. Machine-readable; the human
 Keep `result.summary` to ~2–3 lines per segment — the merge phase reads only
 these summaries, so they must be compact or the merge re-bloats.
 
-## Phase 1 — scope-freeze (names only, cheap)
+## Phase 1 — scope-freeze (deterministic, metadata only)
 
-Goal: produce the task list WITHOUT reading doc bodies or full diffs.
+Goal: produce the task list WITHOUT reading doc bodies or full diffs, and
+**without model judgment on boundaries** (so the segment set is identical across
+runs and models — the rev-3 fix for observed deepseek-5 / kimi-2 / Opus-3 drift).
 
-1. `git diff --stat <since>..HEAD` (and `git log --oneline <since>..HEAD`) → the
-   changed files + commits. `<since>` = the last synced point if recorded,
-   else the `--commits=N` window.
-2. Group changed files by **segment** = the existing `docs/<track>` whose name
-   matches the changed component, else the top-level module of the changed files
-   (same path-to-track rule as the standard Workflow step 3). Changes under
-   `docs/` need no segment.
-3. For each segment, `ls docs/<track>/stories docs/<track>/epics` → record
-   **names** only into `scope.trackDocs`. Do not open them.
-4. Flag any segment whose changes touch a shared index/taxonomy doc
-   (`docs/INDEX.md`, taxonomy) — the merge phase owns those, individual segments
-   must not.
-5. Write `docs/.docup/sweep-state.json` with one `pending` task per segment plus
-   the final `merge` task. Stop here in default (no `--apply`) mode and report
-   the plan in `DOCUP_CHECKPOINT.md`.
+**Primary — run the segmenter (`scripts/segment.js`):**
+```
+node <skill dir>/scripts/segment.js --root <repo> --since <base> --head HEAD [--apply]
+```
+It reads only metadata (`git diff --name-only`, `git log --format`, per-commit
+`--name-only`), classifies each changed file to a track by the precedence below,
+writes one `pending` task per track + a `merge` task to
+`docs/.docup/sweep-state.json`, refreshes `docs/.docup/rubrics.json`, lists
+skipped config/scaffold, and prints a one-line-per-segment summary. The disk
+scans it does (building the reverse-index from existing docs) are cheap local I/O
+— they never enter an LLM context; only the tiny summary + plan-file do.
+
+**Classification precedence (file → track), highest first:**
+1. declared trackmap globs — `docs/.docup/trackmap.json` `{rules:[{glob,track}]}` (project-owned)
+2. reverse-index — file cited in an existing **story/epic** "Files Modified" table → that track
+3. rubric index match globs — `docs/.docup/rubrics.json`
+4. existing `docs/<track>/` whose name matches a path component of the file
+5. structural default — `docs/<top-level-dir>` (source code only)
+Skipped: root-level config, top-level dot dirs (`.beads`, `.github`, …),
+unmapped non-source files. Ties: longer/more-specific rule wins, then alphabetical.
+
+**Rubric index** `docs/.docup/rubrics.json` (persistent, KB-sized, self-feeding):
+per track `{id, track, match:{paths:[]}, coveredFiles:[], canonicalDocs:[]}`.
+op-docup's own "Files Modified" writes enrich `coveredFiles`, so segmentation
+converges to stable rubrics and per-run input stays corpus-independent.
+
+**Prose fallback (only if you cannot run node):** do steps 1-5 by hand —
+`git diff --stat`/`log` for the change set; for each changed source file pick the
+track by the same precedence (longest-prefix match against existing `docs/<track>`
+names and any story/epic that already cites the file; else top-level dir); skip
+config/scaffold; `ls docs/<track>/{stories,epics}` for names; write the plan-file.
+
+In default (no `--apply`) mode, stop after the plan-file and report it in
+`DOCUP_CHECKPOINT.md`.
 
 ## Phase 2 — per-segment pass (sequential, the MVP)
 

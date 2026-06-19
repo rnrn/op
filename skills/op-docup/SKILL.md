@@ -104,12 +104,18 @@ Profile).
 **resume**: skip scope-freeze and continue from the first `pending` task. Absent
 → start at Phase 1.
 
-1. **Scope-freeze (cheap, names-only).** From `git diff --stat <since>..HEAD`
-   derive the changed segments (tracks) and, per segment, its changed files +
-   commit shas + that track's story/epic **names**. Do NOT read doc bodies or
-   full diffs here. Flag segments that touch shared indexes/taxonomy. Write one
-   `pending` task per segment plus a final `merge` task into
-   `docs/.docup/sweep-state.json`.
+1. **Scope-freeze (deterministic, metadata-only).** Run the segmenter:
+   `node <this skill dir>/scripts/segment.js --root <repo> --since <base> --head HEAD [--apply]`.
+   It classifies each changed file to a track by a FIXED precedence (declared
+   `docs/.docup/trackmap.json` → reverse-index from existing stories'/epics' file
+   citations → rubric index → existing `docs/<track>/` name → structural default
+   for source code; config/scaffold skipped), writes one `pending` task per track
+   plus a `merge` task to `docs/.docup/sweep-state.json`, refreshes the persistent
+   rubric index `docs/.docup/rubrics.json`, and prints a one-line-per-segment
+   summary. It reads only metadata (paths, subjects, `--stat`) — cheap — and is
+   model-independent, so the segment set is identical across runs and models. If
+   you cannot run the script, fall back to the prose longest-prefix procedure in
+   `references/sweep.md`. Do NOT read doc bodies or full diffs here.
 2. **Per-segment execution.** Prefer Tier-1 fan-out when the host has it; else
    the Tier-2 sequential baseline. Both write the SAME plan-file, so they are
    interchangeable and resumable.
@@ -139,10 +145,13 @@ Profile).
    `DONE`.
 
 Per-segment budget target ≤ ~50–80k tokens; total scales with Σ segments, not
-the product. Skills write files only — never commit (a resumed or interrupted
-run must not strand a worktree). Tier-1 parallelism is safe without worktree
-isolation because each segment owns a distinct `docs/<track>/` dir and must not
-touch the shared indexes the merge phase reconciles.
+the product. On a weak model, declare a per-pass commit cap (Stack Profile or
+`--batch=N`): a heavy segment processes N commits per sub-pass and persists the
+plan-file between them, so input stays small and the run resumes — pass count
+tracks segment count, not commit count. Skills write files only — never commit (a
+resumed or interrupted run must not strand a worktree). Tier-1 parallelism is safe
+without worktree isolation because each segment owns a distinct `docs/<track>/`
+dir and must not touch the shared indexes the merge phase reconciles.
 
 ## Output
 
