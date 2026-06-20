@@ -57,7 +57,7 @@ Lifecycle placement: after epic implementation (accepted architecture/config/pro
    | `source-of-truth` | Provider/runtime/client/deploy config ownership changes |
 
 6. Propose the new decisions in the conversation report (default mode ends here).
-7. With `--apply`, append the accepted decisions to `docs/decisions/decisions.yaml`; with `--apply --export`, also regenerate `docs/decisions/DECISIONS.md`.
+7. With `--apply`, append the accepted decisions to `docs/decisions/decisions.yaml`; with `--apply --export`, also regenerate `docs/decisions/DECISIONS.md`. **Idempotent append:** before writing each entry, skip any whose identity already exists in the log — match on `category` + a normalized `decision`/`affects` key, not the `ADR-NNN` id. This makes the append safe to re-run: when a goal-driven `op-watch` step crashes after the append but before its state write, the re-entry re-proposes the same decision and must **not** create a duplicate ADR.
 
 ## Output
 
