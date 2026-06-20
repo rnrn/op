@@ -150,7 +150,12 @@ Targeted, cheap, **no full re-audit**. Select the finding(s) by ID (or all `open
 `args = { root, baseline, mode:"verify", findings:[…selected…] }`. The engine returns
 `{ resolutions:[{finding_id, resolution, evidence, notes}] }`. Apply:
 `fixed → status:"verified"`; `partially-fixed → in_progress`; `still-open → open`;
-`cannot-tell → leave + note`. Append the evidence to the finding and to the tracker
+`cannot-tell → leave + note`. **Verify teeth:** a `fixed`/`verified` verdict MUST
+cite the `file:line` re-read **in this run** as evidence — "linter passed", "tests
+pass", "the agent said done", or "should work" are NOT evidence of resolution and
+keep the finding open. A finding moves to `wont_fix` only with a reason tied to a
+declared scope exclusion or a new fact — never to clear the queue (no silent
+demotion to "future work"). Append the evidence to the finding and to the tracker
 issue (`bd note`/comment if exported). Write the ledger. Summarize what changed.
 
 ## Workflow — `tasks`
