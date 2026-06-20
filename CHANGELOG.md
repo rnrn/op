@@ -6,6 +6,8 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-20
+
 ### Added
 - `op-docup/scripts/sweep-driver.mjs` — **boundary-check** (Part B harvest): after each per-segment call, assert the introduced doc changes stay inside the segment's own `docs/<track>/` (merge-owned `INDEX.md`/taxonomy excepted); a segment that wrote outside its track is recorded (`boundary_violation`) and logged. Mechanizes the parallel-safety we previously only asserted.
 - `op-debug` skill (Part B harvest) — root-cause-first debugging: reproduce → trace the bad value back to its source → fix at the source (Iron law: no symptom patches — no `try/except:pass`, `.get(default)`, `sleep(N)`) → anti-whack-a-mole sweep (name the bug pattern, grep the repo for the same shape, fix in one change) → bounded validation. **Three-strikes circuit-breaker:** after 3 failed fixes, stop and escalate as an architecture problem. Default investigates + proposes one fix; `--apply` writes it. Fills the one missing lifecycle stage (debug). Registered in the operational-development-cycle marketplace group.
