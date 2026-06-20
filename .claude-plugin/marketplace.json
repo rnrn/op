@@ -49,7 +49,8 @@
         "./skills/op-feedback-harvest",
         "./skills/op-debt-scan",
         "./skills/op-drift-check",
-        "./skills/op-audit"
+        "./skills/op-audit",
+        "./skills/op-debug"
       ],
       "strict": false
     },

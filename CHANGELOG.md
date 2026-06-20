@@ -7,6 +7,7 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- `op-debug` skill (Part B harvest) — root-cause-first debugging: reproduce → trace the bad value back to its source → fix at the source (Iron law: no symptom patches — no `try/except:pass`, `.get(default)`, `sleep(N)`) → anti-whack-a-mole sweep (name the bug pattern, grep the repo for the same shape, fix in one change) → bounded validation. **Three-strikes circuit-breaker:** after 3 failed fixes, stop and escalate as an architecture problem. Default investigates + proposes one fix; `--apply` writes it. Fills the one missing lifecycle stage (debug). Registered in the operational-development-cycle marketplace group.
 - Autonomy-boundary rule in `templates/AGENTS.md` (Part B harvest): running hands-off (headless / `--apply` / `--dangerously-skip-permissions` / goal-loop) **never invents a required-but-unspecified value** (no guessed `timeout=30` etc. — use the stated/prior value or defer), follows a **reversibility ladder** (rename-before-delete · add-before-replace · stash-not-reset · branch-never-main · stop-not-destroy; if unsure it's reversible, defer), and splits hands-off checkpoints into `### Decisions` vs `### Deferred (needs user input)` (deferred is never silently dropped). Complements the git-boundary rule.
 
 ### Changed
