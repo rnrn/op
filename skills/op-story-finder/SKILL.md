@@ -1,6 +1,6 @@
 ---
 name: op-story-finder
-description: Searches existing BMAD stories by keyword and reports matches with story ID, epic, status, and file path. Use before creating new stories, to check for duplicate work, find related stories in a topic area, or review the backlog by feature or component. Read-only.
+description: Searches existing planned work units (BMAD stories by default; spec-kit tasks, markdown backlog, or the layout declared in docs/spec-systems.md) by keyword and reports matches with ID, epic/container, status, and file path. Use before creating new units, to check for duplicate work, find related work in a topic area, or review the backlog by feature or component. Read-only.
 allowed-tools: Read, Grep, Glob
 metadata:
   safety-class: read-only
@@ -31,11 +31,18 @@ The only argument is the keyword phrase. Tips:
 
 ## Workflow
 
-1. **Search story files:**
+1. **Search the task/spec system's unit files:**
    ```
-   Grep: "[keywords]" in docs/**/stories/*.md
+   Grep: "[keywords]" in docs/**/stories/*.md        # BMAD (default)
    ```
-   If the project declares a different docs layout (in `AGENTS.md`, `CLAUDE.md`, or `docs/HANDBOOK.md`), search that layout instead. A project with no story docs at all is a valid result — report it as `DONE` with "no story docs found", not as a blocker.
+   Search the project's declared/detected system instead when it differs
+   (`AGENTS.md` Stack Profile, `docs/spec-systems.md`, `CLAUDE.md`, or
+   `docs/HANDBOOK.md`): spec-kit → `specs/**/tasks.md`; markdown → the backlog
+   files (`docs/tasks/*.md`, `TODO/BACKLOG`); BMAD → `docs/**/stories/*.md`.
+   (Tracker-based systems — beads/issues — are queried by op-planner/op-audit via
+   their CLIs; this read-only finder greps file-based units.) A project with no
+   units at all is a valid result — report it as `DONE` with "no units found", not
+   as a blocker.
 2. **Parse matches:**
    - Extract story ID and title from `# Story X.Y: Title`
    - Extract epic from `**Epic:**` line

@@ -7,6 +7,7 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Changed
+- `op-planner` / `op-story-finder` — de-BMAD'd to read the project's task/spec system (Part A): planner determines the system (Stack Profile / `docs/spec-systems.md`) and materializes the unit in its format (BMAD story+epic-table · spec-kit tasks.md row · beads `bd create` · markdown entry); story-finder searches the detected system's unit files. BMAD stays the built-in default illustration. Merge-safe; completion-status sections byte-identical.
 - Spec/task-system awareness (Part A): `templates/AGENTS.md` Stack Profile gains `Task / spec system` + `Spec unit format` rows, and a new `templates/docs/spec-systems.md` defines detection (declared-wins → spec-kit → BMAD → beads → markdown → issues → none) + a uniform adapter contract (locate/find/create/export/list) + illustrative per-system recipes (open set). Planning/audit skills read this instead of hardcoding BMAD/beads. Scaffold-only template; merge into existing projects manually. (See `docs/reports/2026-06-20-op-spec-system-and-ultrapack-harvest-plan.md`.)
 
 ## [0.7.0] - 2026-06-19
