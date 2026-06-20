@@ -46,6 +46,13 @@ function docChangesUnder(seg) {
   const out = sh(`git -C "${ROOT}" -c safe.directory="*" status --porcelain -uall`).stdout || "";
   return out.split("\n").map((l) => l.slice(3)).filter((p) => p.startsWith(seg + "/") && !p.includes("/.docup/")).length;
 }
+// full set of changed doc paths (for the boundary check), excluding sweep state
+function changedDocsSet() {
+  const out = sh(`git -C "${ROOT}" -c safe.directory="*" status --porcelain -uall`).stdout || "";
+  return new Set(out.split("\n").map((l) => l.slice(3)).filter((p) => p.startsWith("docs/") && !p.includes("/.docup/")));
+}
+// the merge phase (not a segment) owns these shared indexes
+const mergeShared = (p) => p === "docs/INDEX.md" || p === "docs/docs-taxonomy.md";
 function runModel(promptText) {
   fs.mkdirSync(path.dirname(PROMPT), { recursive: true });
   fs.writeFileSync(PROMPT, promptText);
@@ -81,11 +88,18 @@ while (calls < MAX_CALLS) {
   for (const t of batch) {
     calls++;
     const before = docChangesUnder(t.segment);
+    const fullBefore = changedDocsSet();
     process.stdout.write(`[driver] call ${calls}: segment ${t.id} ${t.segment} ... `);
     const res = runModel(segPrompt(t));
     plan = readPlan(); // model may have updated it
     const tn = plan.tasks.find((x) => x.id === t.id);
     const after = docChangesUnder(t.segment);
+    // boundary check: this segment's writes must stay inside its own track dir
+    const introducedOutside = [...changedDocsSet()].filter((p) => !fullBefore.has(p) && !p.startsWith(t.segment + "/") && !mergeShared(p));
+    if (introducedOutside.length) {
+      tn.boundary_violation = introducedOutside.slice(0, 10);
+      console.error(`  ⚠ boundary: ${t.id} touched ${introducedOutside.length} path(s) outside ${t.segment}: ${introducedOutside.slice(0, 4).join(", ")}`);
+    }
     if (tn && tn.status === "done") { console.log("done (self-reported)"); }
     else if (after > before) { tn.status = "done"; tn.result = tn.result || { wrote: after - before, summary: "driver-marked: docs written (status-lag)" }; writePlan(plan); console.log(`done (driver-marked, +${after - before} docs)`); }
     else if (res.ok) { tn.status = "done"; tn.result = { wrote: 0, summary: "no-docs-needed (clean call, no writes)" }; writePlan(plan); console.log("done (no-docs-needed)"); }
