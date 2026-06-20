@@ -76,9 +76,16 @@ paths you created/updated; empty if none), a 2-3 line summary for the merge step
 phase('Segments')
 log(`Dispatching ${SEGMENTS.length} per-segment doc-sync agent(s) over ${ROOT} (apply=${APPLY}).`)
 
+// Tier policy embedded verbatim — canonical: scripts/lib/fan-out-lane.mjs ("fan-out-lane:v1").
+// A WRITE lane (--apply, doc-sync writes files) → capable model; a read/propose lane
+// (checkpoint-only) → cheap model. (Self-escalation for cheap lanes lives in the lib;
+// these doc-sync lanes are write-or-propose, not escalating.)
+const laneModel = (kind) => (kind === 'write' ? (process.env.OP_FANOUT_CAPABLE_MODEL || undefined) : (process.env.OP_FANOUT_CHEAP_MODEL || 'haiku'))
+const segModel = laneModel(APPLY ? 'write' : 'read')
+
 const results = await parallel(
   SEGMENTS.map((s) => () =>
-    agent(perSegmentPrompt(s), { label: `sweep:${s.segment}`, phase: 'Segments', schema: SEGMENT_RESULT_SCHEMA })
+    agent(perSegmentPrompt(s), { label: `sweep:${s.segment}`, phase: 'Segments', model: segModel, schema: SEGMENT_RESULT_SCHEMA })
       .then((r) => (r
         ? { id: s.id, segment: s.segment, status: r.status, wrote: r.wrote || [], summary: r.summary || '', notes: r.notes || '' }
         : { id: s.id, segment: s.segment, status: 'blocked', wrote: [], summary: '', notes: 'agent produced no result (skipped or died); re-run resumes this segment' }))

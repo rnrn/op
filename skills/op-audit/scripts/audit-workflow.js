@@ -41,10 +41,16 @@ ${BASELINE_PROJECT || '(none discovered — apply general secure-SDLC + language
 For EACH finding fill the six dimensions (0-10) honestly — they drive the Investor Risk Score:
 technical_severity, exploitability, asset_criticality, exposure, blast_radius, remediation_difficulty.`
 
+// Tier policy embedded verbatim — canonical: scripts/lib/fan-out-lane.mjs ("fan-out-lane:v1").
+// Read-only lanes (auditors, verifiers) → cheap model; the write-grade synthesis lane →
+// capable. A cheap auditor that under-scopes (no result) self-escalates ONCE to capable.
+const laneModel = (kind) => (kind === 'write' ? (process.env.OP_FANOUT_CAPABLE_MODEL || undefined) : (process.env.OP_FANOUT_CHEAP_MODEL || 'haiku'))
+
 const FINDINGS_SCHEMA = {
   type: 'object', additionalProperties: false,
-  required: ['domain', 'scope_units', 'summary', 'findings', 'strengths', 'coverage_notes'],
+  required: ['domain', 'scope_units', 'summary', 'findings', 'strengths', 'coverage_notes', 'escalate'],
   properties: {
+    escalate: { type: 'boolean', description: 'set true if this lane could not adequately cover its scope at the current model tier (under-scope) — a more capable model will re-run it once (fan-out-lane:v1 contract)' },
     domain: { type: 'string' },
     scope_units: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string', description: '3-6 sentence domain verdict for a CTO/investor' },
@@ -143,7 +149,7 @@ if (A.mode === 'verify') {
     targets.map((f) => () =>
       agent(
         `${BASELINE}\n\nRole: REMEDIATION VERIFIER. The finding below was reported in a previous audit. Open the cited location NOW, re-read the surrounding code, and decide whether it has been REMEDIATED in the current tree. Be strict: "fixed" requires the code to actually address the root cause, not merely look different. If you cannot reach the code or it is ambiguous, say cannot-tell.\n\nFINDING ${f.id}: ${f.title}\nLOCATION: ${f.location}\nWHAT-WAS-WRONG: ${f.observation || ''}\nEXPECTED-FIX: ${f.remediation || ''}`,
-        { label: `recheck:${f.id}`, phase: 'Verify', schema: RESOLUTION_SCHEMA }
+        { label: `recheck:${f.id}`, phase: 'Verify', model: laneModel('read'), schema: RESOLUTION_SCHEMA }
       ).then((r) => (r ? { ...r, finding_id: f.id } : { finding_id: f.id, resolution: 'cannot-tell', evidence: '', notes: 'verifier produced no result' }))
     )
   )
@@ -161,12 +167,18 @@ const knownNote = (A.knownFindings && A.knownFindings.length)
 phase('Audit')
 log(`Dispatching ${lanes.length} domain auditors over ${ROOT}.`)
 
+const auditLane = async (d) => {
+  const prompt = `${BASELINE}\n\nLANE: ${d.label}\n${d.hint}${d.paths ? `\nFocus modules: ${d.paths}` : ''}${knownNote}\n\nDiscover the relevant files under ${ROOT}, read them, and produce structured findings now. If this lane's scope is larger than you can audit thoroughly at your current capability, set "escalate": true (a more capable model re-runs it once); otherwise set it false.`
+  let r = await agent(prompt, { label: `audit:${d.key}`, phase: 'Audit', model: laneModel('read'), schema: FINDINGS_SCHEMA })
+  // self-escalate ONCE on the fan-out-lane:v1 contract: an explicit under-scope signal
+  // (escalate:true) OR a dead/no-result lane re-runs on the capable model.
+  if (!r || r.escalate === true) r = await agent(prompt, { label: `audit:${d.key}:escalate`, phase: 'Audit', model: laneModel('write'), schema: FINDINGS_SCHEMA })
+  return r
+}
+
 const perDomain = await pipeline(
   lanes,
-  (d) => agent(
-    `${BASELINE}\n\nLANE: ${d.label}\n${d.hint}${d.paths ? `\nFocus modules: ${d.paths}` : ''}${knownNote}\n\nDiscover the relevant files under ${ROOT}, read them, and produce structured findings now.`,
-    { label: `audit:${d.key}`, phase: 'Audit', schema: FINDINGS_SCHEMA }
-  ),
+  (d) => auditLane(d),
   (audit, d) => {
     if (!audit) return { domain: d.key, label: d.label, audit: null, verdicts: [] }
     const toVerify = (audit.findings || []).filter((f) => f.severity === 'Critical' || f.severity === 'High')
@@ -175,7 +187,7 @@ const perDomain = await pipeline(
       toVerify.map((f) => () =>
         agent(
           `${BASELINE}\n\nRole: SENIOR INDEPENDENT VERIFIER (human-review layer). Adversarially verify the finding below: open the cited location, re-read the code, try to REFUTE it. Confirm only if the code truly supports it. Adjust severity if over/under-stated. Judge investor materiality (deal-blocking | material | minor | none). Default to skepticism on thin evidence.\n\nid=${f.id}\ntitle=${f.title}\nlocation=${f.location}\nseverity=${f.severity}\nobservation=${f.observation}\nwhy=${f.why_it_matters}`,
-          { label: `verify:${f.id}`, phase: 'Verify', schema: VERDICT_SCHEMA }
+          { label: `verify:${f.id}`, phase: 'Verify', model: laneModel('read'), schema: VERDICT_SCHEMA }
         ).then((v) => (v ? { ...v, finding_id: f.id } : null))
       )
     ).then((vs) => ({ domain: d.key, label: d.label, audit, verdicts: vs.filter(Boolean) }))
@@ -213,7 +225,7 @@ phase('Synthesize')
 const synthesis = await agent(
   `${BASELINE}\n\nRole: AUDIT ORCHESTRATOR producing the INVESTOR EXECUTIVE PACK from the verified, risk-scored findings below. Board-ready, honest, balanced (cite strengths). Do NOT invent findings; you may group/theme them.\n\nDOMAIN SUMMARIES:\n${JSON.stringify(domainSummaries)}\n\nTOP RISKS (scored 0-10):\n${JSON.stringify(topRisks.map((f) => ({ id: f.id, domain: f.domain, sev: f.final_severity, score: f.investor_risk_score, title: f.title, why: f.why_it_matters, materiality: f.verification.materiality, effort_days: f.effort_days })))}\n\nSeverity counts: ${JSON.stringify(sevCounts)}. Total remediation: ~${totalEffort} person-days.`,
   {
-    label: 'synthesize:exec-pack', phase: 'Synthesize',
+    label: 'synthesize:exec-pack', phase: 'Synthesize', model: laneModel('write'),
     schema: {
       type: 'object', additionalProperties: false,
       required: ['overall_rating', 'overall_assessment', 'top_findings_narrative', 'architecture_resilience', 'security_and_compliance', 'delivery_maturity', 'remediation_economics', 'deal_implication', 'remediation_waves'],
