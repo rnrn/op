@@ -50,7 +50,8 @@
         "./skills/op-debt-scan",
         "./skills/op-drift-check",
         "./skills/op-audit",
-        "./skills/op-debug"
+        "./skills/op-debug",
+        "./skills/op-watch"
       ],
       "strict": false
     },
