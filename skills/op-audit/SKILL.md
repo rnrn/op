@@ -31,8 +31,9 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 /op-audit --help              # same as bare invocation
 /op-audit plan                # staged remediation plan from the ledger (waves; ONE stage per pass)
 /op-audit run                 # full audit -> report + ledger (preserves prior statuses)
+/op-audit run --spec          # audit the PLANNED backlog (specs/stories/tasks), not only code
 /op-audit run --dir docs/dd   # custom audit directory
-/op-audit run --tasks         # also export open findings to the issue tracker
+/op-audit run --tasks         # also export open findings to the project's task/spec system
 /op-audit verify <ID>         # re-check ONE finding for resolution; update its status
 /op-audit verify --open       # re-check all open/in-progress findings (one agent each)
 /op-audit status              # ledger dashboard — no agents run
@@ -43,9 +44,11 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 | Argument | Meaning |
 |---|---|
 | `--dir <path>` | Audit directory (default `docs/audit/`). Holds `audit-findings.json` (ledger), `audit-report.md`, `audit-charter.md`. |
-| `--tasks` | After a run, also run the `tasks` export. |
+| `--tasks` | After a run, also run the `tasks` export (into the project's task/spec system). |
+| `--spec` | `run` mode: audit the planned backlog (units in the task/spec system) for quality/coverage/contradictions, joining the ledger under domain `spec`. |
 | `--lanes <k,…>` | Restrict to specific lanes (keys: `appsec-secrets appsec-surface architecture supplychain quality cicd testing perf-sre`). |
-| `--backend <b>` | Force the `tasks` tracker backend: `beads` \| `planner` \| `file` (default: auto — beads if `bd` on PATH, else planner, else file). |
+| `--system <name>` | Force the task/spec system for `tasks`: `bmad` \| `spec-kit` \| `beads` \| `markdown` \| `issues` \| `file` (default: auto-detect per `docs/spec-systems.md`). |
+| `--backend <b>` | Legacy alias for `--system` covering the file-based recipes: `beads` \| `planner` \| `file`. |
 | `--beads-dir <path>` | Override the beads root (default: git root). For monorepos / multiple modules. |
 | `--force` | In `tasks`, mirror findings into the chosen backend even if they already have a `task_ref` for a *different* backend. |
 
@@ -55,8 +58,12 @@ When invoked with no action, `--help`, or `help`, **do not run agents**. Inspect
 and recommend the next step, so the user never fixes everything blindly in one pass:
 
 1. Look for `audit-findings.json` under the audit dir (default `docs/audit/`).
-2. **No ledger** → there is nothing to fix yet. Recommend `/op-audit run` to produce the
-   first audit + ledger. Briefly list what `run` will do.
+2. **No ledger** → nothing audited yet. If the repo has real code → recommend
+   `/op-audit run`. If it is **greenfield** (little/no code) → there is little to
+   audit; instead route to the *planned* surface: if a backlog exists in the
+   task/spec system, recommend `/op-audit run --spec` (audit the plan); otherwise
+   recommend planning with **op-planner** or surveying existing work with
+   **op-story-finder**. Briefly list what the recommended command will do.
 3. **Ledger with open findings** → recommend planning, not bulk-fixing. Show the one-line
    status (open / verified / regressed counts, open effort) and route to `/op-audit plan`
    for the staged order. Highlight any `regressed` findings first.
@@ -124,6 +131,18 @@ Status lifecycle: `open → in_progress → fixed → verified` (plus `wont_fix`
 6. **Report the diff** to the user: new / resolved / regressed counts + top risks.
 7. If `--tasks`, run the `tasks` workflow.
 
+## Workflow — `run --spec` (audit the plan, not only code)
+
+For greenfield or plan-heavy projects: audit the **planned backlog** (units in the
+task/spec system — BMAD stories/epics, spec-kit `spec/plan/tasks`, beads, markdown
+backlog; detected per `docs/spec-systems.md`). One spec lane reviews the units for:
+missing/untestable acceptance criteria, duplicate or overlapping units, orphan
+units (no owner/epic), plan-vs-code drift (a documented unit with no code, or code
+with no unit), and contradictions across units. Findings join the same
+`audit-findings.json` ledger under domain `spec` (stable ids, same statuses), so
+they plan/verify/export exactly like code findings. Combine with a code `run` or
+use alone on a backlog with little code.
+
 ## Workflow — `verify`
 
 Targeted, cheap, **no full re-audit**. Select the finding(s) by ID (or all `open`/
@@ -136,7 +155,13 @@ issue (`bd note`/comment if exported). Write the ledger. Summarize what changed.
 
 ## Workflow — `tasks`
 
-Export every `open`/`in_progress` finding that lacks a `task_ref` (see dedup rule below).
+Export every `open`/`in_progress` finding that lacks a `task_ref` (see dedup rule below)
+**into the project's task/spec system** — detect it per `docs/spec-systems.md` (or force
+`--system`): a BMAD story under an audit-remediation epic · a spec-kit `tasks.md` row · a
+bead · a `gh issue` · a markdown task. The `task_ref` is backend-tagged (`bd:…`,
+`epic-35 §…`, `spec-kit:…`, `gh:…`, `md:…`, `file`) so a finding is never double-exported,
+and a fixed finding closes its unit. The ledger stays the source of truth; the system is
+the export target. The file-based recipes below are the default fallback.
 
 **Anchor the tracker to the git root, NOT cwd.** First resolve
 `ROOT=$(git rev-parse --show-toplevel)` (fallback: the parent of `--dir`). The audit may
