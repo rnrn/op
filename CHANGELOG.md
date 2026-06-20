@@ -6,6 +6,9 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Changed
+- Spec/task-system awareness (Part A): `templates/AGENTS.md` Stack Profile gains `Task / spec system` + `Spec unit format` rows, and a new `templates/docs/spec-systems.md` defines detection (declared-wins → spec-kit → BMAD → beads → markdown → issues → none) + a uniform adapter contract (locate/find/create/export/list) + illustrative per-system recipes (open set). Planning/audit skills read this instead of hardcoding BMAD/beads. Scaffold-only template; merge into existing projects manually. (See `docs/reports/2026-06-20-op-spec-system-and-ultrapack-harvest-plan.md`.)
+
 ## [0.7.0] - 2026-06-19
 
 ### Added

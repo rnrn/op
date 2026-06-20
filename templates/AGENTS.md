@@ -41,10 +41,12 @@ Declare the project's stack once so skills and agents use these values instead o
 | Build command | TODO |
 | Test / proof command | TODO |
 | Docs layout | TODO — e.g. `docs/<track>/epics\|stories` (default) or the actual layout |
+| Task / spec system | TODO or `auto`. One of: BMAD (`docs/<track>/{epics,stories}/`, `prd.md`) · spec-kit (`specs/<feature>/{spec,plan,tasks}.md`, `.specify/`) · beads (`.beads/`, `bd`) · markdown (`docs/tasks/*.md`, `TODO/BACKLOG`) · issues (gh/linear/jira) · none. See `docs/spec-systems.md`. |
+| Spec unit format | TODO or `default` — the file shape a planned unit takes in that system |
 | File-size budget | TODO or `default` (500/1000 lines) |
 | Commit budget | TODO or `default` (300 changed code lines) |
 
-Skills treat their built-in numbers and stack examples as defaults; values declared here win.
+Skills treat their built-in numbers and stack examples as defaults; values declared here win. The **Task / spec system** drives how planning and audit skills create / find / export work units — see `docs/spec-systems.md` for detection and per-system recipes.
 
 ## Preflight
 
