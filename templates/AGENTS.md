@@ -65,6 +65,14 @@ Every change must end with a concrete proof command or evidence file. If validat
 
 Skills and agents **write files; they do not stage or commit.** Never run `git add`, `git commit`, or `git reset` from a skill run — staging and commits belong to the user, or to the dedicated `baby-commit` / `dry-commit` skills invoked explicitly. (An agent that auto-commits — common with `--dangerously-skip-permissions` — can corrupt a detached worktree and strand later steps.)
 
+## Autonomy boundary (no invented defaults)
+
+When running without a user present (headless, `--apply`, `--dangerously-skip-permissions`, or a goal/loop driver), **hands-off reduces questions; it does not expand authority.**
+
+- **Never invent a required-but-unspecified value.** A guessed `timeout=30`, batch size, retry count, or path is invented, not safe. Use the value the user stated, the value already in use, or **defer** — do not guess.
+- **Reversibility ladder** — prefer the reversible move: rename-before-delete · add-before-replace · stash-not-reset · branch/worktree-never-main · stop-not-destroy. If unsure whether an action is reversible, assume it is **not**, and defer.
+- **Two-log split** in any checkpoint produced hands-off: a `### Decisions` list (auto-choices that would otherwise have prompted, one line each) and a `### Deferred (needs user input)` list (where no conservative default existed). The deferred list is the agenda for the next user interaction — it is never silently dropped.
+
 ## Epic Closure Gate
 
 Before an epic's status flips to DONE, run these **in order** — the steps are a
