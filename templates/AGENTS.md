@@ -1,6 +1,10 @@
 # Project Agent Rules
 
-Use these rules for all agent-assisted development in this repository.
+Use these rules for all agent-assisted development in this repository. The
+cross-cutting conventions every op-* skill obeys (declared-wins, git boundary,
+autonomy boundary, proof-targets-outcome, verify teeth, resumable state,
+completion protocol, brevity) are stated once in `docs/principles.md` — read it
+once; a skill logs a line only to *deviate*, never to repeat.
 
 ## Operating Method
 

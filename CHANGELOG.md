@@ -6,6 +6,9 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Added
+- `templates/docs/principles.md` — shared cross-cutting conventions (GP1–GP9: declared-wins, checkpoint-first, git boundary, autonomy boundary, proof-targets-outcome, verify teeth, resumable state, completion protocol, brevity) stated once, referenced from `templates/AGENTS.md`. Skills log a line only to *deviate*, never to repeat — DRY-ing the conventions that op-* skills previously each restated (Part B harvest: shared principles include).
+
 ## [0.9.0] - 2026-06-20
 
 ### Added
