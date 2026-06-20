@@ -15,7 +15,7 @@
       "name": "operational-development-cycle",
       "source": "./",
       "description": "Daily development lifecycle skills. Install this group when a project needs a repeatable path from task intake to implementation closeout and periodic drift/debt review. Pair with documentation-kits when a full dated project documentation snapshot is needed.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "Crateon"
       },
@@ -59,7 +59,7 @@
       "name": "git-release",
       "source": "./",
       "description": "Git and release hygiene skills for dry commit planning, baby-step commits, and changelog maintenance.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "Crateon"
       },
@@ -88,7 +88,7 @@
       "name": "upstream-research",
       "source": "./",
       "description": "Upstream repository research skills for harvesting commits, issues, pull requests, and cherry-pick candidates into project planning artifacts.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "Crateon"
       },
@@ -119,7 +119,7 @@
       "name": "documentation-kits",
       "source": "./",
       "description": "Batch documentation snapshot skills for generating dated onboarding, architecture, integration, delivery-map, debt, and optional DOCX project documentation kits.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "Crateon"
       },

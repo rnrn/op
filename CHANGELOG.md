@@ -6,6 +6,8 @@ without diffing. The format is based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-20
+
 ### Added
 - `op-watch` skill + `scripts/verdict.mjs` (Part C / rev-3) — drive a remediation or build **campaign** to completion one bounded step per invocation under a `goal` loop: `goal op-watch "<intent>"`. op-watch is a **thin dispatcher** (delegates to op-audit/op-debug/op-planner, owns no analysis); each step reads `docs/.work/<slug>.json`, dispatches the right sub-step (derive/build/remediate/verify/re-baseline), persists state atomically, and emits a **deterministic CLEAN/CONTINUE verdict computed by `verdict.mjs` over the state** (never model-asserted — so a goal loop can't be fooled into stopping early). Three status buckets (active / terminal-resolved / terminal-handed-to-human); CLEAN = no active units (deferred/blocked surfaced). Encodes the eight "nothing-unresolved" invariants (status totality, 3-strikes, non-convergence, budget, severity-defer, verify-teeth, surfaced deferred/blocked) + two boundary gates (derive coverage, fake-clean) + a resumability contract (atomic writes, status-from-repo, persisted counters/charter, re-armable goal). Registered in the operational-development-cycle marketplace group; `docs/.work/` gitignored. (See `docs/reports/2026-06-20-op-spec-system-and-ultrapack-harvest-plan.md` rev 3.)
 
