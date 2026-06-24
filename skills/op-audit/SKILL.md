@@ -1,6 +1,6 @@
 ---
 name: op-audit
-description: Run an investor-grade, multi-agent technical due-diligence audit of a codebase and track the findings as durable tasks. Fans out independent domain auditors (security, architecture, supply-chain, quality, CI/CD, testing, perf), adversarially verifies every High/Critical finding, scores each by an Investor-Risk formula, writes a board-ready report, and exports findings to a status ledger and issue tracker. Use when the user asks for a code/security/architecture audit, a due-diligence or investor/M&A review, or wants to re-check, track, or close previously found audit issues without re-running the whole audit. Invoked bare or with --help, it inspects state and recommends the next step — run an audit, or plan the fixes in staged waves so they ship in order instead of all at once.
+description: Run an investor-grade, multi-agent technical due-diligence audit of a codebase and track the findings as durable tasks. Use when the user asks for a code/security/architecture audit, a due-diligence or investor/M&A review, or wants to re-check, track, or close previously found audit issues without re-running the whole audit. Invoked bare or with `--help`, it inspects state and recommends the next step (run an audit, or plan the fixes in staged waves).
 license: MIT
 metadata:
   safety-class: generator
@@ -30,7 +30,8 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 /op-audit                     # guided help: inspect state, recommend the next step
 /op-audit --help              # same as bare invocation
 /op-audit plan                # staged remediation plan from the ledger (waves; ONE stage per pass)
-/op-audit run                 # full audit -> report + ledger (preserves prior statuses)
+/op-audit run                 # full DISCOVERY audit (whole project) -> report + ledger
+/op-audit run --scope charter --paths "<changed>"   # SCOPED audit of a change vs the plan (no project-wide wandering)
 /op-audit run --spec          # audit the PLANNED backlog (specs/stories/tasks), not only code
 /op-audit run --dir docs/dd   # custom audit directory
 /op-audit run --tasks         # also export open findings to the project's task/spec system
@@ -46,11 +47,23 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 | `--dir <path>` | Audit directory (default `docs/audit/`). Holds `audit-findings.json` (ledger), `audit-report.md`, `audit-charter.md`. |
 | `--tasks` | After a run, also run the `tasks` export (into the project's task/spec system). |
 | `--spec` | `run` mode: audit the planned backlog (units in the task/spec system) for quality/coverage/contradictions, joining the ledger under domain `spec`. |
+| `--scope <project\|charter>` | **Stance** (default `project` for `run`). `project` = DISCOVERY: audit the whole codebase, find anything — this *seeds* a remediation charter. `charter` = SCOPED: audit only `--paths` (a change/diff) against the plan — it *serves* a charter and never wanders project-wide. `verify` is inherently `charter`-scoped. |
+| `--paths <globs/files>` | With `--scope charter`: the exact changed surface to audit (the diff). Auditors must stay within it. |
 | `--lanes <k,…>` | Restrict to specific lanes (keys: `appsec-secrets appsec-surface architecture supplychain quality cicd testing perf-sre`). |
 | `--system <name>` | Force the task/spec system for `tasks`: `bmad` \| `spec-kit` \| `beads` \| `markdown` \| `issues` \| `file` (default: auto-detect per `docs/spec-systems.md`). |
 | `--backend <b>` | Legacy alias for `--system` covering the file-based recipes: `beads` \| `planner` \| `file`. |
 | `--beads-dir <path>` | Override the beads root (default: git root). For monorepos / multiple modules. |
 | `--force` | In `tasks`, mirror findings into the chosen backend even if they already have a `task_ref` for a *different* backend. |
+
+## Stance — discovery seeds a charter; scoped serves one
+
+The `--scope` distinction is load-bearing: **`project`** = DISCOVERY (find anything across the
+whole codebase — *seeds* a remediation charter; run standalone or to start `goal op-watch "ledger
+clean"`); **`charter`** = SCOPED (audit only `--paths`, a change/diff, against the plan — *serves* a
+charter; `verify` is always charter-scoped). **Never run discovery as an in-loop step of a
+build/plan campaign** — re-importing the whole project's findings is the focus-loss a charter
+prevents (inside `op-watch`, discovery runs only for a `ledger-clean` charter; build charters use
+scoped audit + preflight). Full rationale: `references/operations.md`.
 
 ## Default — guided help (`--help` / no args)
 
@@ -111,7 +124,10 @@ Status lifecycle: `open → in_progress → fixed → verified` (plus `wont_fix`
    `{id,title,location}` as `knownFindings` so auditors REUSE stable IDs.
 3. **Run the engine.** Invoke the **Workflow** tool with `scriptPath` =
    `<this skill dir>/scripts/audit-workflow.js` and
-   `args = { root, baseline, mode:"audit", knownFindings, lanes? }`.
+   `args = { root, baseline, mode:"audit", knownFindings, lanes?, cheapModel?, capableModel? }`.
+   **Pass `cheapModel`/`capableModel` via `args`** (read `OP_FANOUT_CHEAP_MODEL`/
+   `OP_FANOUT_CAPABLE_MODEL` here, in-session — the sandboxed engine has no `process`/env, so env
+   set there would throw; omit to use the engine defaults `haiku` / inherit-session).
    The engine fans out the lanes, adversarially verifies every High/Critical finding
    (refuted ones are dropped), scores survivors, and returns
    `{ sevCounts, totalEffort, domainSummaries, findings[], synthesis }`.
@@ -133,15 +149,11 @@ Status lifecycle: `open → in_progress → fixed → verified` (plus `wont_fix`
 
 ## Workflow — `run --spec` (audit the plan, not only code)
 
-For greenfield or plan-heavy projects: audit the **planned backlog** (units in the
-task/spec system — BMAD stories/epics, spec-kit `spec/plan/tasks`, beads, markdown
-backlog; detected per `docs/spec-systems.md`). One spec lane reviews the units for:
-missing/untestable acceptance criteria, duplicate or overlapping units, orphan
-units (no owner/epic), plan-vs-code drift (a documented unit with no code, or code
-with no unit), and contradictions across units. Findings join the same
-`audit-findings.json` ledger under domain `spec` (stable ids, same statuses), so
-they plan/verify/export exactly like code findings. Combine with a code `run` or
-use alone on a backlog with little code.
+For greenfield/plan-heavy projects: audit the **planned backlog** (units in the task/spec system,
+detected per `docs/spec-systems.md`) — one spec lane reviews units for missing/untestable ACs,
+duplicate/orphan units, plan-vs-code drift, and contradictions. Findings join the same ledger under
+domain `spec` (stable ids, same statuses), so they plan/verify/export like code findings. Use with a
+code `run` or alone on a backlog with little code. Detail: `references/operations.md`.
 
 ## Workflow — `verify`
 
@@ -160,50 +172,16 @@ issue (`bd note`/comment if exported). Write the ledger. Summarize what changed.
 
 ## Workflow — `tasks`
 
-Export every `open`/`in_progress` finding that lacks a `task_ref` (see dedup rule below)
-**into the project's task/spec system** — detect it per `docs/spec-systems.md` (or force
-`--system`): a BMAD story under an audit-remediation epic · a spec-kit `tasks.md` row · a
-bead · a `gh issue` · a markdown task. The `task_ref` is backend-tagged (`bd:…`,
-`epic-35 §…`, `spec-kit:…`, `gh:…`, `md:…`, `file`) so a finding is never double-exported,
-and a fixed finding closes its unit. The ledger stays the source of truth; the system is
-the export target. The file-based recipes below are the default fallback.
-
-**Anchor the tracker to the git root, NOT cwd.** First resolve
-`ROOT=$(git rev-parse --show-toplevel)` (fallback: the parent of `--dir`). The audit may
-run from a subdir (e.g. `docs/audit/`); if you let beads/planner default to cwd the DB or
-stories land in the wrong place. `--beads-dir <path>` overrides ROOT for monorepos.
-
-**Backend selection** (default = auto; force with `--backend beads|planner|file`):
-1. **beads** — chosen when `bd` is on PATH. Beads is fully local (git-backed store in
-   `<ROOT>/.beads/`, no external service). Run `bd` from inside ROOT
-   (`( cd "$ROOT" && bd … )` — note `bd` has no `-C/--chdir` flag in older builds, so
-   `cd` is the portable form). It needs an initialized DB:
-   - probe with `( cd "$ROOT" && bd list )` (or `bd doctor`). If it errors with
-     *no beads database found*, initialize once: `( cd "$ROOT" && bd init --prefix audit )`
-     (creates `<ROOT>/.beads/`, IDs like `audit-<hash>`). Do **not** run `bd init` from cwd —
-     it would create `.beads/` in the audit subdir.
-   - if init reports *embedded Dolt requires CGO* (CGO-less `bd` build), retry with
-     `bd init --prefix audit --server` — it launches a local Dolt sql-server automatically
-     (still fully local, no remote service).
-   - then, one issue per finding: `( cd "$ROOT" && bd create … )` (or batch markdown) with
-     title `[<severity>] <id> <title>`, body = observation + why + remediation + evidence +
-     Investor-Risk score, label `audit`, priority from severity (`-p 0..4`, 0=highest;
-     Critical→0 High→1 Medium→2 Low→3 Info→4). Pass long bodies via `--body-file <abs-path>`
-     using **absolute** paths (cross-shell temp dirs differ). Record each returned `bd` ID
-     (use `--silent` to capture just the ID) into that finding's `task_ref` (e.g. `bd:audit-7`).
-     Link dependencies if obvious.
-   - if `bd` is on PATH but init fails (read-only FS, etc.) → fall through to planner.
-2. **planner** — the project's planner skill (`op-planner` / BMAD stories) for grouped
-   stories. Chosen when `bd` is absent or `--backend planner`.
-3. **file** — write `audit-tasks.md`, a checklist grouped by remediation wave. Last resort
-   or `--backend file`.
-
-**Dedup rule:** never create a duplicate in the **same backend** for a finding that already
-has a `task_ref` for that backend. `task_ref` should be backend-tagged (`bd:audit-7`,
-`epic-35 §35.9`, `file`). A finding already exported to planner is NOT considered exported
-to beads — `--backend beads` (optionally `--force`) mirrors such findings into beads and
-appends the new ref. Plain `tasks` with no findings missing a ref for the chosen backend
-exports nothing and says so.
+Export every `open`/`in_progress` finding that lacks a `task_ref` **into the project's task/spec
+system** (detect per `docs/spec-systems.md`, or force `--system`): a BMAD story under an
+audit-remediation epic · a spec-kit `tasks.md` row · a bead · a `gh issue` · a markdown task. The
+`task_ref` is backend-tagged (`bd:…`, `epic-35 §…`, `gh:…`, `file`) so a finding is never
+double-exported; the ledger stays the source of truth. **Anchor the tracker to the git root, NOT
+cwd** (`ROOT=$(git rev-parse --show-toplevel)`). Backend = auto (`--backend beads|planner|file`):
+beads when `bd` is on PATH (fully local), else planner (op-planner stories), else `file`
+(`audit-tasks.md`). **Read `references/operations.md` for the full recipe** — the exact `bd
+init`/CGO/`--server` quirks, the priority mapping, the `--beads-dir` monorepo override, and the
+per-backend dedup rule — when you actually run an export.
 
 ## Workflow — `status`
 

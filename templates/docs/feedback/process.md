@@ -51,3 +51,35 @@ Run this only when the user asks to harvest feedback from history.
    - `Checklist (for preflight)`
 4. Update `index.md` with routing metadata.
 5. Keep one-off historical facts out of baseline rules.
+
+## Recommended Topic Templates
+
+Beyond the always-on `baseline.md`, the bundle ships ready-to-adopt topic templates — copy
+and de-genericize them when the project gains that surface:
+
+- `docs/feedback/test-infra.md` (`TI1-TI10`) — test setup/isolation, DB bootstrap, flaky-harness
+  prevention, E2E authoring. Pair with `docs/testing/testing-rules.md` and
+  `docs/testing/e2e-maintenance-guide.md`. Route them in `index.md` so `$preflight` loads
+  them whenever a change touches tests or the E2E harness.
+
+## Authoring Rules
+
+- Prefer **one file per operational topic**, not one per incident.
+- Keep rules concrete and machine-usable; **name the actual paths used in this repo**.
+- Anti-examples must be realistic, not toy nonsense; pair every `BAD` with a `GOOD`.
+- Use **stable rule IDs** (`<PREFIX><n>`) so rules can be cross-referenced.
+- If a rule becomes obsolete, **remove or replace** it — never layer contradictory guidance.
+- Every new rule updates `index.md` (topic, open-when conditions, ID range, quick selector).
+
+## Preflight Content Standard
+
+Every non-trivial preflight states these explicitly (so the gate is auditable, not vibes):
+
+- `Scope` — exact files, packages, scripts, services, or runtimes touched.
+- `Invariants` — behavior that must not regress.
+- `Risk list` — where the change is likely to fail or recreate a prior incident.
+- `Validation` — the tests/smoke checks/evidence that will prove correctness (the success
+  signal, not a proxy).
+
+**Blocker criteria:** feedback blocks implementation when a violation would recreate a known
+incident or break a critical invariant.

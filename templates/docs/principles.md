@@ -9,7 +9,11 @@ Read the `AGENTS.md` Stack Profile first (language, archetype, build/test comman
 docs layout, **task/spec system** → `docs/spec-systems.md`, file/commit budgets).
 A skill's built-in numbers and stack examples are illustrative defaults; declared
 values replace them. Manifest/archetype/system sets are **open** — never hardcode a
-closed list.
+closed list. **Stack-deviation:** a planned unit whose implementation language differs
+from the declared language(s) is a deviation — flag it, record a `### Decision` (why this
+language), and isolate it in a separate dir; a spec's *illustrative* code (e.g. a Python
+reference adapter in a Go repo) is not a mandate to add a language. `scripts/lib/stack-check.mjs`
+checks planned/changed files against the declared set (config/docs/shell are stack-neutral).
 
 ## GP2 — Checkpoint-first; write only on --apply
 Default mode writes a checkpoint/report only. Real files are created/changed only

@@ -2,6 +2,17 @@
 
 This file is the project operating contract. Update it before code when the operating model changes.
 
+## Stack
+
+State the primary implementation language and runtime up front — this is the first thing an
+agent reads to orient, and the authoritative answer to "what is this project built in":
+
+- **Language(s):** TODO (e.g. Go) — must match `AGENTS.md` Stack Profile `Language(s)`.
+- **Runtime / build:** TODO (e.g. a single Go binary; `go build ./...`).
+- **Adding another language** is a deliberate, **human-accepted** `### Decision` (recorded in
+  `docs/decisions/`), isolated in its own dir — a spec's reference code in another language is
+  illustrative, not a mandate. Default everything to the declared language.
+
 ## Method
 
 Development follows:

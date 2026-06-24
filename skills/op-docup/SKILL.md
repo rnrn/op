@@ -1,6 +1,6 @@
 ---
 name: op-docup
-description: Syncs recent code changes with BMAD project documentation, starting from a sync checkpoint. Use when code changed and docs need updating, after implementing a feature or fix, to map commits to stories and epics, or to verify docs before closing an epic (--epic). Default mode writes only DOCUP_CHECKPOINT.md; real doc updates require --apply. For a large change set spanning many tracks, --sweep (also auto-detected) runs a resumable, segment-bounded pass that survives interruption and continues where it left off on re-run.
+description: Sync recent code changes with BMAD project documentation from a sync checkpoint. Use when code changed and docs need updating, after a feature or fix, to map commits to stories/epics, or to verify docs before closing an epic (`--epic`). Default mode writes only DOCUP_CHECKPOINT.md; real doc updates require `--apply` (`--sweep`, also auto-detected, runs a resumable segment-bounded pass for large multi-track sets).
 metadata:
   safety-class: checkpoint
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, Workflow, Task
@@ -88,75 +88,41 @@ Read `references/templates.md` when applying (BMAD story-update template).
 
 ## Sweep mode (large change sets, resumable)
 
-A single-context pass over a large change set blows tokens and is all-or-nothing
-(one timeout loses everything). Sweep **bounds context per segment** and
-externalizes progress to a durable plan-file, so an interrupted run **resumes
-instead of restarting**. Read `references/sweep.md` for the plan-file schema and
-the loop recipe.
+A single-context pass over a large change set blows tokens and is all-or-nothing. Sweep **bounds
+context per segment** and externalizes progress to a durable plan-file, so an interrupted run
+**resumes instead of restarting**. **Full mechanics — plan-file schema, the 3 phases, Tier-1
+fan-out, the driver loop, idempotency: `references/sweep.md`.** Router essentials:
 
-**Trigger.** The default single-pass Workflow above stays for small changes — no
-regression. Sweep engages on `--sweep`, or auto when changed top-level segments
-> 2 or touched files > 30 (override the threshold in the `AGENTS.md` Stack
-Profile).
+**Trigger.** The default single-pass Workflow above stays for small changes. Sweep engages on
+`--sweep`, or auto when changed top-level segments > 2 or touched files > 30 (override in `AGENTS.md`).
 
-**Resume first (every invocation).** Before anything else, look for
-`docs/.docup/sweep-state.json`. If it exists with `status` ≠ `complete`,
-**resume**: skip scope-freeze and continue from the first `pending` task. Absent
-→ start at Phase 1.
+**Resume first (every invocation):** look for `docs/.docup/sweep-state.json`; if it exists with
+`status` ≠ `complete`, skip scope-freeze and continue from the first `pending` task. Absent → start
+at scope-freeze.
 
-1. **Scope-freeze (deterministic, metadata-only).** Run the segmenter:
-   `node <this skill dir>/scripts/segment.js --root <repo> --since <base> --head HEAD [--apply]`.
-   It classifies each changed file to a track by a FIXED precedence (declared
-   `docs/.docup/trackmap.json` → reverse-index from existing stories'/epics' file
-   citations → rubric index → existing `docs/<track>/` name → structural default
-   for source code; config/scaffold skipped), writes one `pending` task per track
-   plus a `merge` task to `docs/.docup/sweep-state.json`, refreshes the persistent
-   rubric index `docs/.docup/rubrics.json`, and prints a one-line-per-segment
-   summary. It reads only metadata (paths, subjects, `--stat`) — cheap — and is
-   model-independent, so the segment set is identical across runs and models. If
-   you cannot run the script, fall back to the prose longest-prefix procedure in
-   `references/sweep.md`. Do NOT read doc bodies or full diffs here.
-2. **Per-segment execution.** Prefer Tier-1 fan-out when the host has it; else
-   the Tier-2 sequential baseline. Both write the SAME plan-file, so they are
-   interchangeable and resumable.
-   - **Tier-1 (accelerator — parallel, bounded).** Invoke the **Workflow** tool
-     with `scriptPath = <this skill dir>/scripts/sweep-workflow.js` and
-     `args = { root, since, head, apply, segments }` (the `pending` tasks). It
-     dispatches one bounded doc-sync agent per segment — each writes only its
-     own track and returns a compact summary — and returns
-     `{ segments:[{id,segment,status,wrote,summary,notes}] }`. Fold each result
-     into the plan-file (`status: done`, `result`). If the Workflow tool is
-     unavailable, spawn the same per-segment work as sequential `Task` agents;
-     if neither exists, fall through to Tier-2.
-   - **Tier-2 (portable baseline — sequential).** Walk `pending` tasks one at a
-     time. Each task sees **only its segment scope** (that track's commits +
-     named docs; fetch bodies on demand) — run Workflow steps 2–5 scoped to that
-     segment, and on `--apply` write only that track's stories/epics. Mark the
-     task `done` and **persist the plan-file before the next task**.
-   Either way, if tasks remain `pending` (budget reached, or an agent died),
-   **stop** and end with `DONE_WITH_CONCERNS` whose reason names `X/Y segments
-   synced, Z pending — re-run op-docup --apply to continue` (no new status token;
-   the count lives in the plan-file and a re-run resumes).
-3. **Merge (once, when all segment tasks are `done`).** Read the compact
-   per-segment summaries from the plan-file (NOT the corpus); reconcile
-   `docs/INDEX.md`/taxonomy once; enforce single source of truth (cross-segment
-   dedup — never document the same thing in two tracks). Set `merge.status` and
-   top-level `status: complete`, write the final `DOCUP_CHECKPOINT.md`, end
-   `DONE`.
+1. **Scope-freeze (deterministic, metadata-only):** `node <this skill dir>/scripts/segment.js
+   --root <repo> --since <base> --head HEAD [--apply]` — classifies each changed file to a track by
+   fixed precedence, writes one `pending` task per track + a `merge` task to
+   `docs/.docup/sweep-state.json`. Metadata only (no doc bodies/diffs). Fallback: the prose
+   longest-prefix procedure in `references/sweep.md`.
+2. **Per-segment execution** (both tiers write the SAME plan-file — interchangeable, resumable):
+   - **Tier-1 (parallel):** Workflow tool, `scriptPath = <this skill dir>/scripts/sweep-workflow.js`,
+     `args = { root, since, head, apply, segments, cheapModel?, capableModel? }` (pass
+     `cheapModel`/`capableModel` from `OP_FANOUT_*` resolved **here in-session** — the sandbox engine
+     has no `process`/env; omit for defaults). One bounded doc-sync agent per segment; fold each
+     result into the plan-file. Workflow unavailable → sequential `Task` agents, else Tier-2.
+   - **Tier-2 (sequential baseline):** walk `pending` tasks one at a time, each scoped to its
+     segment; on `--apply` write only that track's stories/epics; persist the plan-file before the next.
+   If tasks remain `pending` (budget/death), **stop** with `DONE_WITH_CONCERNS` naming `X/Y synced,
+   Z pending — re-run op-docup --apply to continue` (a re-run resumes from the plan-file).
+3. **Merge** (once all segments `done`): reconcile `docs/INDEX.md`/taxonomy from the per-segment
+   summaries (not the corpus), enforce single source of truth, set `status: complete`, write the
+   final checkpoint, end `DONE`.
 
-Per-segment budget target ≤ ~50–80k tokens; total scales with Σ segments, not
-the product. On a weak model, declare a per-pass commit cap (Stack Profile or
-`--batch=N`): a heavy segment processes N commits per sub-pass and persists the
-plan-file between them, so input stays small and the run resumes — pass count
-tracks segment count, not commit count. For a model that stalls even within one
-segment, drive completion externally with `scripts/sweep-driver.mjs` — it runs
-**one segment per fresh model invocation** over the plan-file (host command given
-via `--cmd`), is robust to status-lag (marks a segment done from the docs it
-wrote), and retries/advances on a stall; this is the reliable cross-model way to
-reach `complete`. Skills write files only — never commit (a
-resumed or interrupted run must not strand a worktree). Tier-1 parallelism is safe
-without worktree isolation because each segment owns a distinct `docs/<track>/`
-dir and must not touch the shared indexes the merge phase reconciles.
+Budget ≤ ~50–80k tokens/segment; total scales with Σ segments. For stall-prone/weak models drive
+completion with `scripts/sweep-driver.mjs` (one segment per fresh invocation) — see
+`references/sweep.md`. Skills write files only, never commit; Tier-1 is worktree-safe because each
+segment owns a distinct `docs/<track>/` dir.
 
 ## Output
 

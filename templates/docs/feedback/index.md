@@ -37,6 +37,7 @@ Do not silently average contradictory rules.
 | File | Topic | Open when | Rule IDs |
 |---|---|---|---|
 | [baseline.md](baseline.md) | Baseline preflight frame, safety, validation, contracts, artifact layers, harness capabilities, and selective install | Always | `B0-B16` |
+| [test-infra.md](test-infra.md) | Test setup/isolation, DB bootstrap & template reuse, flaky-harness prevention, E2E authoring/maintenance | The change touches tests, fixtures, the test DB/bootstrap, or the E2E harness (`<tests>/**`, `<tests>/e2e/**`), or adds/relaxes assertions or skips. Also load `docs/testing/testing-rules.md` + `docs/testing/e2e-maintenance-guide.md`. | `TI1-TI10` |
 
 ## Quick Selector
 
@@ -45,6 +46,7 @@ If the task touches a project-specific area, add a topic file and route it here.
 | Area | First feedback files to load |
 |---|---|
 | Any non-trivial implementation, migration, refactor, docs/workflow/skill/agent change | `baseline.md` |
+| Tests / fixtures / test DB bootstrap / E2E harness (`<tests>/**`, `<tests>/e2e/**`); adding or relaxing assertions/skips | `test-infra.md` (TI1-TI10), then `docs/testing/testing-rules.md` + `docs/testing/e2e-maintenance-guide.md` |
 
 ## Feedback Harvesting
 

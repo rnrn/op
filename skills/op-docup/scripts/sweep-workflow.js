@@ -80,7 +80,9 @@ log(`Dispatching ${SEGMENTS.length} per-segment doc-sync agent(s) over ${ROOT} (
 // A WRITE lane (--apply, doc-sync writes files) → capable model; a read/propose lane
 // (checkpoint-only) → cheap model. (Self-escalation for cheap lanes lives in the lib;
 // these doc-sync lanes are write-or-propose, not escalating.)
-const laneModel = (kind) => (kind === 'write' ? (process.env.OP_FANOUT_CAPABLE_MODEL || undefined) : (process.env.OP_FANOUT_CHEAP_MODEL || 'haiku'))
+// Tier ids arrive via `args` (aliased A) — the Workflow sandbox has no `process` (env would throw).
+// The skill resolves OP_FANOUT_* in-session and forwards {cheapModel, capableModel} in args.
+const laneModel = (kind) => (kind === 'write' ? (A.capableModel || undefined) : (A.cheapModel || 'haiku'))
 const segModel = laneModel(APPLY ? 'write' : 'read')
 
 const results = await parallel(

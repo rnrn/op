@@ -3,7 +3,8 @@
 // STATE file (never the model's say-so), so a goal-loop driver can be fooled neither
 // into stopping early NOR into running forever. Three outcomes:
 //
-//   CLEAN-DONE     exit 0  done:true   — nothing active, nothing handed-off, validate green.
+//   CLEAN-DONE     exit 0  done:true   — >=1 unit, nothing active, nothing handed-off,
+//                                        no dup ids, validate green (zero units is never DONE).
 //   CLEAN-HANDOFF  exit 0  done:false  — loop must STOP but the campaign is NOT done:
 //                                        active work remains but a breaker tripped
 //                                        (budget-out · a unit hit 3 strikes · no net
@@ -30,6 +31,7 @@
 //   - no-progress:   over the last K history entries (default 3), resolved did not rise
 //                    and active did not fall — AND every active unit has been tried (F-E).
 //   - step-cap:      step/history count >= max_steps (default max(20, units*5)) (F-D).
+//   - dup-ids:       any duplicate unit id (corrupt ledger; also refuses CLEAN-DONE) (F-H).
 
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -55,6 +57,11 @@ const active = units.filter((u) => ACTIVE.has(u.status));
 const resolved = units.filter((u) => RESOLVED.has(u.status));
 const human = units.filter((u) => HUMAN.has(u.status));
 const unknown = units.filter((u) => !ACTIVE.has(u.status) && !RESOLVED.has(u.status) && !HUMAN.has(u.status));
+
+// duplicate unit ids corrupt the active count and stall convergence (a hand-written
+// ledger bug); surface them and refuse CLEAN-DONE so the loop repairs (validate-state --fix).
+const ids = units.map((u) => u.id);
+const dupIds = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
 
 // ── termination breakers ──────────────────────────────────────────────────────
 const STRIKES = Number.isFinite(s.strikes) ? s.strikes : 3;
@@ -88,12 +95,21 @@ const MAX_STEPS = Number.isFinite(argMax) && argMax > 0 ? argMax
   : (Number.isFinite(s.max_steps) ? s.max_steps : Math.max(20, units.length * 5));
 const stepCapHit = active.length > 0 && stepCount >= MAX_STEPS;
 
+// campaign-level gates set by accept.mjs (open gate = NOT done, even with no active units):
+//   gate_build           — a build/compile cmd failed (F-K functional gate)
+//   gate_stack_undeclared — code files shipped with no declared stack, so the deviation guard is OFF (F-P)
+const gateBlock = [];
+if (s.gate_build) gateBlock.push("build");
+if (s.gate_stack_undeclared) gateBlock.push("undeclared-stack");
+
 const breakerNotes = [];
 if (budgetOut) breakerNotes.push("budget-out");
 if (stuck.length) breakerNotes.push(`3-strikes(${stuck.map((u) => u.id).slice(0, 6).join(",")})`);
 if (noProgress) breakerNotes.push(`no-progress(${K})`);
 if (stepCapHit) breakerNotes.push(`step-cap(${stepCount}/${MAX_STEPS})`);
-const breaker = budgetOut || stuck.length > 0 || noProgress || stepCapHit;
+if (dupIds.length) breakerNotes.push(`dup-ids(${dupIds.slice(0, 4).join(",")})`);
+if (gateBlock.length) breakerNotes.push(`gate:${gateBlock.join("+")}`);
+const breaker = budgetOut || stuck.length > 0 || noProgress || stepCapHit || dupIds.length > 0 || gateBlock.length > 0;
 
 // optional independent re-check (e.g. validate:dist) — a red gate is not "done"
 let validateOk = true, validateNote = "";
@@ -107,9 +123,16 @@ if (VALIDATE) {
 for (const u of human) console.log(`  ${u.status.toUpperCase()}: ${u.id} ${u.title || u.segment || ""} ${u.notes ? "— " + u.notes : ""}`.trimEnd());
 for (const u of stuck) console.log(`  STUCK: ${u.id} ${u.title || u.segment || ""} — ${u.attempts} attempts (≥${STRIKES} strikes); needs the user`.trimEnd());
 if (unknown.length) console.log(`  ⚠ ${unknown.length} unit(s) in an unrecognized status: ${unknown.map((u) => u.id + ":" + u.status).slice(0, 6).join(", ")}`);
+if (dupIds.length) console.log(`  ⚠ duplicate unit id(s): ${dupIds.slice(0, 6).join(", ")} — run validate-state.mjs --fix`);
+if (gateBlock.includes("build")) console.log(`  ⚠ open gate: build — ${s.gate_build} (fix the build, then re-verify)`);
+if (gateBlock.includes("undeclared-stack")) console.log("  ⚠ open gate: undeclared-stack — code shipped with no declared language; declare AGENTS.md Stack Profile `Language(s)` so the deviation guard runs");
+if (units.length === 0) console.log("  ⚠ no recognized units — empty or non-contract state (op-watch expects a `units[]` array); NOT done");
 
 // ── outcome ─────────────────────────────────────────────────────────────────
-const done = active.length === 0 && human.length === 0 && unknown.length === 0 && validateOk;
+// units.length>0 is required for DONE: a state with zero recognized units (derive never
+// populated it, or a non-contract schema like `stories` instead of `units`) is NOT
+// vacuously complete — that would be a false CLEAN-DONE (F-J, found on north-mini-code-free).
+const done = units.length > 0 && active.length === 0 && human.length === 0 && unknown.length === 0 && dupIds.length === 0 && validateOk && gateBlock.length === 0;
 let outcome;
 if (done) outcome = "CLEAN-DONE";
 else if (active.length === 0 || breaker) outcome = "CLEAN-HANDOFF";

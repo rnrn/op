@@ -1,6 +1,6 @@
 ---
 name: op-feedback-harvest
-description: Harvest durable preflight feedback rules from git commits, bug fixes, reviews, incident notes, and declared agent-contract rules (AGENTS.md, CLAUDE.md critical rules) into docs/feedback. Use when the user asks to collect feedback from commits, update docs/feedback after bugs, backfill preflight rules, or bootstrap feedback rules for a project — especially right after scaffolding, when real rules still live in CLAUDE.md. Default mode writes only a checkpoint; updating docs/feedback requires explicit --apply.
+description: Harvest durable preflight feedback rules from git commits, bug fixes, reviews, incident notes, and agent-contract rules (AGENTS.md/CLAUDE.md) into docs/feedback. Use when the user asks to collect feedback from commits, update docs/feedback after bugs, backfill preflight rules, or bootstrap feedback rules for a fresh project. Default mode writes only a checkpoint; updating docs/feedback requires explicit `--apply`.
 metadata:
   safety-class: checkpoint
 ---

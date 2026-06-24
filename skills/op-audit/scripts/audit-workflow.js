@@ -28,6 +28,12 @@ export const meta = {
 const A = args || {}
 const ROOT = A.root || '.'
 const BASELINE_PROJECT = (A.baseline || '').trim()
+// Stance: 'project' (discovery, whole codebase) | 'charter' (scoped to A.paths, serves a plan).
+const SCOPE = A.scope === 'charter' ? 'charter' : 'project'
+const PATHS = (A.paths || '').trim()
+const SCOPE_CLAUSE = SCOPE === 'charter' && PATHS
+  ? `SCOPED AUDIT (charter): audit ONLY this changed surface against the plan — do NOT scan, discover, or report issues elsewhere in the project: ${PATHS}. Read those files and produce structured findings now.`
+  : `Discover the relevant files under ${ROOT}, read them, and produce structured findings now.`
 
 const BASELINE = `
 You are an INDEPENDENT third-party auditor producing INVESTOR-GRADE technical due-diligence on the
@@ -44,7 +50,9 @@ technical_severity, exploitability, asset_criticality, exposure, blast_radius, r
 // Tier policy embedded verbatim — canonical: scripts/lib/fan-out-lane.mjs ("fan-out-lane:v1").
 // Read-only lanes (auditors, verifiers) → cheap model; the write-grade synthesis lane →
 // capable. A cheap auditor that under-scopes (no result) self-escalates ONCE to capable.
-const laneModel = (kind) => (kind === 'write' ? (process.env.OP_FANOUT_CAPABLE_MODEL || undefined) : (process.env.OP_FANOUT_CHEAP_MODEL || 'haiku'))
+// Tier ids arrive via `args` (aliased A) — the Workflow sandbox has no `process` (env would throw).
+// The skill resolves OP_FANOUT_* in-session and forwards {cheapModel, capableModel} in args.
+const laneModel = (kind) => (kind === 'write' ? (A.capableModel || undefined) : (A.cheapModel || 'haiku'))
 
 const FINDINGS_SCHEMA = {
   type: 'object', additionalProperties: false,
@@ -168,7 +176,7 @@ phase('Audit')
 log(`Dispatching ${lanes.length} domain auditors over ${ROOT}.`)
 
 const auditLane = async (d) => {
-  const prompt = `${BASELINE}\n\nLANE: ${d.label}\n${d.hint}${d.paths ? `\nFocus modules: ${d.paths}` : ''}${knownNote}\n\nDiscover the relevant files under ${ROOT}, read them, and produce structured findings now. If this lane's scope is larger than you can audit thoroughly at your current capability, set "escalate": true (a more capable model re-runs it once); otherwise set it false.`
+  const prompt = `${BASELINE}\n\nLANE: ${d.label}\n${d.hint}${d.paths ? `\nFocus modules: ${d.paths}` : ''}${knownNote}\n\n${SCOPE_CLAUSE} If this lane's scope is larger than you can audit thoroughly at your current capability, set "escalate": true (a more capable model re-runs it once); otherwise set it false.`
   let r = await agent(prompt, { label: `audit:${d.key}`, phase: 'Audit', model: laneModel('read'), schema: FINDINGS_SCHEMA })
   // self-escalate ONCE on the fan-out-lane:v1 contract: an explicit under-scope signal
   // (escalate:true) OR a dead/no-result lane re-runs on the capable model.

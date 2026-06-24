@@ -58,7 +58,19 @@ detached worktree and strand later steps).
 5. **Apply scope rule** — one story = one layer/subsystem of the project's
    actual architecture (backend/frontend/infrastructure for web; core/UI/
    platform for desktop apps; stage/harness/infra for pipelines); split
-   multi-layer features into separate stories.
+   multi-layer features into separate stories. **Stack-deviation flag:** if a
+   story's implementation language differs from the declared Stack Profile
+   language(s) — a spec's reference code is illustrative, not a mandate (GP1) —
+   flag it in the checkpoint, record the deviation as a `status: pending` decision
+   for **human** acceptance (route to `op-decision-memory` on `--apply`; never
+   self-accept the language), and scope the story to an **isolated dir** (separate
+   from the main module). `scripts/lib/stack-check.mjs` over the story's planned
+   files detects it (config/docs/shell are stack-neutral). **Undeclared stack:** if
+   the Stack Profile `Language(s)` is missing or `TODO`, the spec is being sliced
+   with the deviation guard *off* — detect the project's real language (`go.mod`/
+   `package.json`/`Cargo.toml`/…), state it in the checkpoint, and plan every story
+   in that language by default; a polyglot spec (e.g. Python reference code in a Go
+   repo) must not silently set the implementation language.
 6. **Write `PLANNER_CHECKPOINT.md`** — required sections listed under Output;
    keep it under 140 lines.
 7. **Apply gate** — only if the user explicitly passed `--apply` in the same

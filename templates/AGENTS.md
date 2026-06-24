@@ -38,9 +38,17 @@ Treat these files as the active project-method scaffold:
 
 Declare the project's stack once so skills and agents use these values instead of their built-in defaults and examples:
 
+> **Declare `Language(s)` FIRST — leaving it `TODO` silently disables the stack-deviation
+> guard.** With no declared language, `stack-check` / op-preflight / op-watch's accept gate
+> cannot tell an unrequested language from an intended one, and a polyglot spec (e.g. a doc
+> whose reference code is in another language) will quietly pull a model into adding it. An
+> undeclared stack is the single most common reason a model ships code in a language nobody
+> asked for. List the language(s) you actually build in; a non-declared language then requires
+> a recorded, **human-accepted** `### Decision` — a model never self-authorizes its own deviation.
+
 | Field | Value |
 |---|---|
-| Language(s) | TODO |
+| Language(s) | TODO — REQUIRED, e.g. `go` (the primary build language; comma-separate only genuinely-used languages) |
 | Project archetype | TODO — service / GUI app / CLI / library / ML pipeline / embedded / mixed |
 | Build command | TODO |
 | Test / proof command | TODO |
