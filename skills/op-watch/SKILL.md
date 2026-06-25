@@ -32,9 +32,11 @@ the verdict over state. `goal op-watch "ledger clean"` is the remediation specia
 ## One step (every invocation)
 1. **Read state** `docs/.work/<slug>.json`. Absent → **derive** (atomic — a crashed derive leaves no partial backlog):
    - Freeze a **`charter`** `{intent, done_condition, anchor, spec_system, branch, test_language}`.
-     `done_condition` = termination shape (`epic-closure-gate` | `ledger-clean`); `test_language` =
-     the project's primary declared Stack-Profile language, fixed up front (stops per-story language
-     drift — see protocol.md). Subsequent steps READ the charter, never rewrite it.
+     **Set `done_condition` deterministically — never leave it unset:** a **build** charter →
+     `epic-closure-gate` when AGENTS.md/HANDBOOK define an Epic Closure Gate (then SEED the gate units
+     below), else `units-verified`; a **remediation** charter → `ledger-clean`. `test_language` = the
+     project's primary declared Stack-Profile language, fixed up front (stops per-story language drift
+     — see protocol.md). Subsequent steps READ the charter, never rewrite it.
    - **Decompose by charter stance** (op-audit: discovery seeds, scoped serves): remediation
      (`ledger-clean`) seeds from `op-audit run` (scope **project**); build uses `op-planner` +
      `op-audit run --spec` (audit the plan) + per-unit preflight. **Never run discovery for a build
@@ -42,11 +44,14 @@ the verdict over state. `goal op-watch "ledger clean"` is the remediation specia
      **Write state with a script:** `scripts/init.mjs --state <file> --charter "<intent>" --units
      <units.json>` (dedups ids, atomic). For remediation, ingest first: `scripts/ingest.mjs --state
      <file> --findings <ledger.json> --write` (natural-key dedup). Coverage: every part of the intent maps to a unit.
-   - **Gate-as-units:** for an epic gate, seed `gate:drift, gate:docup, gate:drift2, gate:decision,
-     gate:checklist` (ordered) — CLEAN-DONE is unreachable until they resolve (findings-empty ≠ epic-done).
+   - **Gate-as-units:** when `done_condition` is `epic-closure-gate`, seed `gate:drift, gate:docup,
+     gate:drift2, gate:decision, gate:checklist` (ordered) — CLEAN-DONE is unreachable until they
+     resolve (findings-empty ≠ epic-done).
    - **Branch guard:** on `main`/`master` with a write due → set the unit `deferred` ("switch to a
      work branch"); never auto-create a branch (GP4). Set `derive_complete`.
-2. **Dispatch** the next sub-step deterministically from state:
+2. **Dispatch** the next sub-step deterministically from state. **Priority: a `built`/`fixed` unit
+   awaiting verify is dispatched (verified) BEFORE starting a new build** — verify-as-you-go keeps
+   `resolved` rising and avoids accumulating unverified work (which otherwise stalls the loop).
    - active **defect** → `op-debug` (root-cause fix).
    - active **build** → **`op-preflight` scoped to the unit first** (loads `docs/feedback` incl.
      `test-infra.md`; a preflight `FAIL` defers the unit — don't implement past a red gate), then

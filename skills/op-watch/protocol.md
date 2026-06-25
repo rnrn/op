@@ -11,8 +11,12 @@ and the exhaustive contract. The deterministic scripts (`verdict.mjs`, `accept.m
 3. **3-strikes per unit** — persist `attempts`; op-debug failed 3× → set `blocked`. `verdict.mjs`
    **also** trips CLEAN-HANDOFF on any active unit with `attempts ≥ 3`, so a missed escalation
    cannot loop forever.
-4. **Non-convergence guard** — append `history[] {step,active,resolved}` each step (via `mark.mjs`);
-   `verdict.mjs` trips CLEAN-HANDOFF when net progress stalls over K steps. **Absolute backstop:**
+4. **Non-convergence guard** — append `history[] {step,active,resolved,score}` each step (via
+   `mark.mjs`); `verdict.mjs` trips CLEAN-HANDOFF when net progress stalls over K steps. `score` is a
+   per-unit status-rank sum (open 0 · in_progress 1 · fixed/built 2 · terminal 3) so within-active
+   advancement (open→built) counts as progress even though `built ⊂ active` leaves the bucket counts
+   flat — a stall trips only when resolved didn't rise AND active didn't fall AND score didn't rise.
+   **Absolute backstop:**
    it also trips at a **step-cap** (`s.max_steps`, default `max(20, units×5)`) so even a
    productive-but-non-converging loop terminates — the counter is script-maintained, honest
    independent of the model.

@@ -35,8 +35,14 @@ if (NOTES) u.notes = NOTES;
 
 const active = s.units.filter((x) => ACTIVE.has(x.status)).length;
 const resolved = s.units.filter((x) => RESOLVED.has(x.status)).length;
+// progress score: a per-unit status-rank sum so within-active advancement (open→in_progress→built)
+// counts as progress. The active/resolved COUNTS miss it — `built ⊂ active`, so building every unit
+// before verifying any leaves both counts flat and falsely looks like a stall to the no-progress
+// breaker (found dogfooding the slimmed skills on kimi — all 4 stories built, none yet verified, F-S).
+const RANK = (st) => (RESOLVED.has(st) || HUMAN.has(st)) ? 3 : (st === "fixed" || st === "built") ? 2 : (st === "in_progress") ? 1 : 0;
+const score = s.units.reduce((a, x) => a + RANK(x.status), 0);
 s.step = (s.step || 0) + 1;
-(s.history ||= []).push({ step: s.step, active, resolved });
+(s.history ||= []).push({ step: s.step, active, resolved, score });
 
 const tmp = STATE + ".tmp";
 fs.writeFileSync(tmp, JSON.stringify(s, null, 2));

@@ -80,7 +80,12 @@ if (active.length > 0 && active.every((u) => (u.attempts || 0) > 0) && Array.isA
   const first = recent[0], last = recent[recent.length - 1];
   const resolvedRose = (last.resolved ?? 0) > (first.resolved ?? 0);
   const activeFell = (last.active ?? 0) < (first.active ?? 0);
-  noProgress = !resolvedRose && !activeFell;
+  // open→in_progress→built is real progress invisible to the active/resolved COUNTS (built ⊂ active).
+  // mark.mjs records a per-unit status-rank sum `score`; a rising score means work advanced even if the
+  // bucket counts are flat (e.g. building every unit before verifying any), so it is NOT a stall (F-S).
+  // Backward-compatible: if the window lacks `score` (pre-F-S state), fall back to the count-only test.
+  const scoreRose = first.score != null && last.score != null && last.score > first.score;
+  noProgress = !resolvedRose && !activeFell && !scoreRose;
 }
 
 // absolute step-cap (F-D backstop): mark.mjs bumps `step`/`history` every step by
