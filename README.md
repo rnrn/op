@@ -4,7 +4,14 @@ Portable Claude Code and Codex skills, commands, agents, hooks, and project-meth
 
 ## Quick start — implement a feature from a doc
 
-Two steps: turn your spec/notes into work units with **op-planner**, then let
+> **First install the skills** (once per host) so the client can find them — see
+> [Installation](#installation) below (`/plugin marketplace add` the
+> `operational-development-cycle` group, or run [INSTALL.md](INSTALL.md)). Skills
+> live in `~/.claude/skills/`; the files in this bundle are what you install *from*,
+> not where the client looks. (Codex has no skill discovery — point its `AGENTS.md`
+> at the skills instead.)
+
+Then, two steps: turn your spec/notes into work units with **op-planner**, and let
 **`goal op-watch`** build them to done autonomously. You never run the internal
 scripts (`verdict`/`accept`/`mark`) yourself — op-watch does.
 
