@@ -2,6 +2,47 @@
 
 Portable Claude Code and Codex skills, commands, agents, hooks, and project-method templates for operational development workflows.
 
+## Quick start — implement a feature from a doc
+
+Two steps: turn your spec/notes into work units with **op-planner**, then let
+**`goal op-watch`** build them to done autonomously. You never run the internal
+scripts (`verdict`/`accept`/`mark`) yourself — op-watch does.
+
+**1. Plan (review-first).** Point op-planner at your document; `--apply` writes the
+epic + stories so you can review the scope before any code:
+
+```
+/op-planner slice docs/notes/<your-feature>.md into an epic and stories --apply
+```
+
+Review the generated `docs/<track>/stories/*.md`, adjust scope if needed.
+
+**2. Build (one autonomous prompt).** Start a `goal` loop over the plan:
+
+```
+goal op-watch "build the <feature> epic to CLEAN-DONE"
+```
+
+op-watch derives a campaign from the stories and pumps **one bounded step per
+turn** — per story: preflight → implement → acceptance gate (file-truth +
+stack-deviation + stub checks) → verify → close the epic-closure gate — until a
+deterministic **CLEAN-DONE** verdict. The loop keeps it on-charter and catches
+false-done / language drift automatically.
+
+**Prefer one prompt?** Skip the plan review and let derive plan the doc itself:
+
+```
+goal op-watch "implement the feature in docs/notes/<your-feature>.md — slice it with op-planner, then build to CLEAN-DONE"
+```
+
+**One-time project setup** (so the build stays on track):
+
+- **Declare your stack** in `AGENTS.md` (Stack Profile → `Language(s):` e.g. `go`)
+  and `docs/HANDBOOK.md` — otherwise a polyglot spec can pull the model into a
+  language you didn't ask for.
+- **Work on a feature branch**, not `main`/`master` — op-watch defers writes on
+  the default branch.
+
 ## Demo
 
 The op-* lifecycle in 25 seconds — preflight gate, checkpoint-first planning, and the completion-status protocol on a real project:
