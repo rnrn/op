@@ -54,7 +54,9 @@ let declared = arg("declared", ""), declaredSrc = declared ? "arg" : "";
 if (!declared) {
   try {
     const m = fs.readFileSync(path.join(ROOT, "AGENTS.md"), "utf8").match(/\|\s*Language\(s\)\s*\|\s*([^|]+)\|/i);
-    if (m && !/TODO/i.test(m[1])) { declared = m[1].trim(); declaredSrc = "profile"; }
+    // strip markdown formatting (`backticks`, quotes, bold **) — a human/agent often writes
+    // `| Language(s) | `go` |` per the template's example; the bare token is what we want.
+    if (m && !/TODO/i.test(m[1])) { declared = m[1].replace(/[`'"*]/g, "").trim(); declaredSrc = "profile"; }
   } catch { /* no AGENTS.md / no profile */ }
 }
 if (!declared) {
@@ -74,7 +76,7 @@ const RESOLVED = new Set(["verified", "done", "wont_fix"]);
 const units = Array.isArray(s.units) ? s.units : [];
 
 // --- helpers ---------------------------------------------------------------
-const SKIP_DIR = new Set([".git", "node_modules", "vendor", ".work", "dist", ".beads", ".idea", "__pycache__"]);
+const SKIP_DIR = new Set([".git", "node_modules", "vendor", ".work", "dist", ".beads", ".idea", "__pycache__", ".claude", ".agents", ".codex"]);
 const CODE_EXT = new Set(["js","mjs","cjs","jsx","ts","tsx","py","go","rs","java","kt","rb","php","cs","swift","scala","cpp","cc","cxx","c","h","hpp","m","mm","ex","exs","erl","clj","dart","lua","r","jl","hs","ml","zig"]);
 const rel = (abs) => path.relative(ROOT, abs).replace(/\\/g, "/");
 function walkCode(dir, acc) {

@@ -30,7 +30,7 @@ const LANG_ALIAS = {
   ts: "typescript", typescript: "typescript", py: "python", python: "python", "c++": "cpp",
   "c#": "csharp", "objective-c": "objc",
 };
-const normLang = (s) => { const k = String(s).trim().toLowerCase(); return LANG_ALIAS[k] || k; };
+const normLang = (s) => { const k = String(s).replace(/[`'"*]/g, "").trim().toLowerCase(); return LANG_ALIAS[k] || k; };
 
 const declared = new Set((arg("declared", "") || "").split(/[,\s]+/).filter(Boolean).map(normLang));
 let files = (arg("files", "") || "").split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);

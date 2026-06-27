@@ -76,6 +76,15 @@ Present a short plan to the user before writing anything:
    a marketplace source -> select the agreed groups. (Agent cannot click
    this UI; the user does. For headless setups, copying the needed skill
    folders into `~/.claude/skills/` is the fallback.)
+   - **Also copy the shared `scripts/lib/` to `~/.claude/scripts/lib/`** — a
+     SIBLING of `skills/`, **not** under `skills/`. The skill scripts import it
+     by relative path (`../../../scripts/lib/...` from
+     `skills/<name>/scripts/*.mjs`), so it must resolve to `<root>/scripts/lib/`
+     (e.g. `~/.claude/scripts/lib/stack-check.mjs`,
+     `~/.claude/scripts/lib/fan-out-lane.mjs`). Putting it under
+     `skills/scripts/lib/` breaks the accept gate and the fan-out engines. The
+     `/plugin` marketplace install places this automatically; only the headless
+     copy fallback must get the location right.
 2. Scaffold: copy ONLY the agreed missing files from `templates/`. Merge,
    never overwrite — if `docs/feedback/index.md` exists, add missing index
    entries instead of replacing the file.
