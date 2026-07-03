@@ -31,18 +31,20 @@ the verdict over state. `goal op-watch "ledger clean"` is the remediation specia
 
 ## One step (every invocation)
 1. **Read state** `docs/.work/<slug>.json`. Absent → **derive** (atomic — a crashed derive leaves no partial backlog):
-   - Freeze a **`charter`** `{intent, done_condition, anchor, spec_system, branch, test_language}`.
-     **Set `done_condition` deterministically — never leave it unset:** a **build** charter →
+   - Freeze the **charter facts** via `init.mjs` flags (they land in the state file: `charter` =
+     the intent STRING, and `done_condition`/`campaign_type`/`test_language`/`anchor`/`branch` as
+     TOP-LEVEL fields — that is where the scripts read them). **Set `--done-condition`
+     deterministically — never leave it defaulted blindly:** a **build** charter →
      `epic-closure-gate` when AGENTS.md/HANDBOOK define an Epic Closure Gate (then SEED the gate units
-     below), else `units-verified`; a **remediation** charter → `ledger-clean`. `test_language` = the
+     below), else `units-verified`; a **remediation** charter → `ledger-clean`. `--test-language` = the
      project's primary declared Stack-Profile language, fixed up front (stops per-story language drift
-     — see protocol.md). Subsequent steps READ the charter, never rewrite it.
+     — see protocol.md). Subsequent steps READ these fields, never rewrite them.
    - **Decompose by charter stance** (op-audit: discovery seeds, scoped serves): remediation
      (`ledger-clean`) seeds from `op-audit run` (scope **project**); build uses `op-planner` +
      `op-audit run --spec` (audit the plan) + per-unit preflight. **Never run discovery for a build
      charter** (re-importing project-wide findings is the distraction the charter prevents).
      **Write state with a script:** `scripts/init.mjs --state <file> --charter "<intent>" --units
-     <units.json>` (dedups ids, atomic). For remediation, ingest first: `scripts/ingest.mjs --state
+     <units.json> [--done-condition <shape>] [--test-language <lang>]` (dedups ids, atomic). For remediation, ingest first: `scripts/ingest.mjs --state
      <file> --findings <ledger.json> --write` (natural-key dedup). Coverage: every part of the intent maps to a unit.
    - **Gate-as-units:** when `done_condition` is `epic-closure-gate`, seed `gate:drift, gate:docup,
      gate:drift2, gate:decision, gate:checklist` (ordered) — CLEAN-DONE is unreachable until they
@@ -57,7 +59,7 @@ the verdict over state. `goal op-watch "ledger clean"` is the remediation specia
      `test-infra.md`; a preflight `FAIL` defers the unit — don't implement past a red gate), then
      implement (delegate). **Test-touching unit: preflight produces a `Test Plan {language,
      framework, isolation, run-cmd}` BEFORE any code**; the planned language is stack-checked vs
-     `charter.test_language` — a non-declared test language is a plan-time Decision (defer + draft an
+     the frozen `test_language` state field — a non-declared test language is a plan-time Decision (defer + draft an
      ADR), decided before writing the suite, never self-accepted (protocol.md).
    - unit `fixed`/`built`, unconfirmed → **verify, deterministic-first:**
      1) **acceptance gate (always):** `scripts/accept.mjs --state <file> --root <repo> [--declared

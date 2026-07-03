@@ -6,8 +6,12 @@
 // ids, normalizes statuses, seeds step 0 / empty history.
 //
 //   node init.mjs --state docs/.work/<slug>.json --charter "<intent>" --units <units.json>
-//     [--done-condition ledger-clean|epic-closure-gate] [--type build|remediation]
+//     [--done-condition ledger-clean|epic-closure-gate|units-verified] [--type build|remediation]
+//     [--test-language go] [--anchor epic-1] [--branch feature/x]
 // <units.json> = array of {id, name?, status?(default open), attempts?(0), files?[], key?}
+// Charter shape on disk: `charter` is the intent STRING; the other charter facts
+// (done_condition, campaign_type, test_language, anchor, branch) are TOP-LEVEL fields —
+// scripts read them there. (SKILL.md describes the same layout.)
 
 import fs from "node:fs";
 
@@ -35,10 +39,14 @@ for (const u of list) {
 }
 const units = Object.values(byId);
 
+const TESTLANG = arg("test-language", ""), ANCHOR = arg("anchor", ""), BRANCH = arg("branch", "");
 const state = {
   charter: CHARTER,
   campaign_type: arg("type", "build"),
   done_condition: arg("done-condition", "ledger-clean"),
+  ...(TESTLANG ? { test_language: TESTLANG } : {}),
+  ...(ANCHOR ? { anchor: ANCHOR } : {}),
+  ...(BRANCH ? { branch: BRANCH } : {}),
   derive_complete: true,
   step: 0,
   units,

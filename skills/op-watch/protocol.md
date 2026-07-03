@@ -48,7 +48,7 @@ OUTPUT control over the real artifacts, INDEPENDENT of the model's self-report:
 
 ## Test language decided up front (derive + the test-plan preflight)
 
-`charter.test_language` is frozen at derive = the project's primary declared Stack-Profile language
+The `test_language` state field (set at derive via `init.mjs --test-language`) is frozen = the project's primary declared Stack-Profile language
 (or, if the spec's reference tests use another language and a `### Decision` already allows it, that).
 Freezing it stops a per-story drift where the model silently improvises the test language at
 implementation time (the Python-tests-in-a-Go-repo trap). If the declared stack is empty, leave it
@@ -56,7 +56,7 @@ null and the gate falls back to the `--declared` arg / manifest auto-detect.
 
 For a test-touching build unit, op-preflight must produce a `Test Plan {language, framework,
 isolation, run-cmd}` **before any code**; the planned language is stack-checked vs
-`charter.test_language`. A non-declared test language is a **plan-time Decision** (defer the unit +
+the frozen `test_language` field. A non-declared test language is a **plan-time Decision** (defer the unit +
 draft a `pending` ADR via `accept.mjs --decisions`), decided *before* authoring a throwaway suite —
 the proactive twin of the output gate. A model never self-accepts its own deviation; it drafts
 `pending` and hands off for human acceptance.
