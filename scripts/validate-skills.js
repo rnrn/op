@@ -148,6 +148,56 @@ function validateStandard(skillDir, name, parsed, content, body, bodyLines, desc
     issues.push(warn(`SKILL.md body is ${bodyLines} lines (target <=200); move reference material to references/`));
   }
 
+  // SKILL_STANDARD "Content placement & budgets" — hard cap: angle brackets in the
+  // description are allowed ONLY inside backtick code spans (a bare <placeholder>
+  // breaks packaging in other skill ecosystems).
+  const descNoCode = description.replace(/`[^`]*`/g, "");
+  if (/[<>]/.test(descNoCode)) {
+    const sample = (descNoCode.match(/<[^>\s]{0,24}>?|>/) || ["<>"])[0];
+    issues.push(fail(`description has a bare angle bracket outside a code span (${sample}); backtick-wrap placeholders (SKILL_STANDARD: Content placement & budgets)`));
+  }
+
+  // Size-pressure tier (warnings): ~75-100-word target, warn above 120.
+  const descWords = description.trim().split(/\s+/).filter(Boolean).length;
+  if (descWords > 120) {
+    issues.push(warn(`description is ${descWords} words (target ~75-100); trim to the trigger + purpose (SKILL_STANDARD: Content placement & budgets)`));
+  }
+
+  // >=3 enumerated trigger scenarios (clauses split on commas / "or" after the trigger keyword).
+  const trigMatch = description.match(TRIGGER_PHRASING);
+  if (trigMatch) {
+    const tail = description.slice(trigMatch.index);
+    const clauses = tail.split(/,|;| or /).map((s) => s.trim()).filter((s) => s.length > 2);
+    if (clauses.length < 3) {
+      issues.push(warn(`description enumerates ${clauses.length} trigger scenario(s) (SKILL_STANDARD asks >=3 distinct clauses)`));
+    }
+  }
+
+  // Every reference link carries a read-trigger: a naked link (fewer than ~5 words of
+  // surrounding prose on its line + the previous line) is a file the agent never opens.
+  const rawLines = body.split(/\r?\n/);
+  for (let i = 0; i < rawLines.length; i++) {
+    if (!/(references\/[A-Za-z0-9_.-]+\.md|\bprotocol\.md)/.test(rawLines[i])) continue;
+    const ctx = `${rawLines[i - 1] || ""} ${rawLines[i]}`
+      .replace(/`[^`]*`/g, " ")
+      .replace(/(references\/[A-Za-z0-9_.-]+\.md|\bprotocol\.md)/g, " ")
+      .replace(/[^A-Za-z']+/g, " ").trim();
+    const proseWords = ctx ? ctx.split(/\s+/).length : 0;
+    if (proseWords < 5) {
+      issues.push(warn(`line ${i + 1}: reference link without a read-trigger (say WHEN/what-for to read it — SKILL_STANDARD: Content placement & budgets)`));
+    }
+  }
+
+  // Skill payloads carry only what the agent needs: no human-facing meta docs inside
+  // the skill folder (escape hatch: the file contains '<!-- skill-payload: required -->').
+  const CLUTTER = /^(README\.md|INSTALL[^/]*\.md|CHANGELOG\.md|QUICK_REFERENCE\.md)$/i;
+  for (const entry of fs.readdirSync(skillDir)) {
+    if (!CLUTTER.test(entry)) continue;
+    const text = fs.readFileSync(path.join(skillDir, entry), "utf8");
+    if (text.includes("skill-payload: required")) continue;
+    issues.push(fail(`${entry} inside the skill folder (human docs live at repo level; opt out with '<!-- skill-payload: required -->'; SKILL_STANDARD: Content placement & budgets)`));
+  }
+
   const hasReadOnly = /^## Read-Only Contract/m.test(body);
   const hasSafety = /^## Safety Contract/m.test(body);
   if (!hasReadOnly && !hasSafety) {

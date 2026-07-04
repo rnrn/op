@@ -1,6 +1,6 @@
 ---
 name: project-doc-kit
-description: Generate or refresh a dated project documentation kit - onboarding, architecture decomposition, service map, sequence diagrams, API/config contracts, delivery map, debt and contradictions, plus an optional landscape DOCX album. Use when the user asks for a full project documentation snapshot, onboarding pack, doc kit, architecture decomposition, or a docs/YYYYMMDD package. Generator skill - writes only under the dated kit directory docs/<YYYYMMDD>/; --dry-run plans the kit without writing anything.
+description: Generate or refresh a dated project documentation kit - onboarding, architecture decomposition, service map, sequence diagrams, API/config contracts, delivery map, debt and contradictions, plus an optional landscape DOCX album. Use when the user asks for a full project documentation snapshot, onboarding pack, doc kit, architecture decomposition, or a docs/YYYYMMDD package. Generator skill - writes only under the dated kit directory `docs/<YYYYMMDD>/`; --dry-run plans the kit without writing anything.
 metadata:
   safety-class: generator
 ---
