@@ -62,6 +62,23 @@ Section bar: **Target And Range** — paths, HEAD, analyzed range, full vs incre
 
 **Example** — `/upstream-harvest LocalTaskClaw`: 42 commits `a1b2c3..d4e5f6` group into "ReAct Agent Loop" (feature) and "HTML -> React Migration" (history); the checkpoint proposes Epic 1 (stories 1.1-1.3, AC like "run.py executes tools in parallel via asyncio.gather"), Epic H1, a test plan, and the gate "no real docs written (no --apply)".
 
+## Final message (non-negotiable, every run)
+
+The conversation reply that ends a run MUST contain this block verbatim-shaped (absolute
+paths, exact field labels), immediately before the completion-status line — everything else
+in the reply is free-form, this block is not (a missing or renamed field is a protocol
+violation, same as the completion token):
+
+```text
+Repository:    <upstream URL from `git -C <clone> remote get-url origin`; else "local clone, no remote">
+Upstream code: <ABSOLUTE path to the upstream clone, e.g. D:/project/upstreams/<PROJECT>>
+Upstream docs: <ABSOLUTE path to the generated docs, e.g. D:/project/upstreams_docs/<PROJECT>>
+Range:         <analyzed range> · Epics: <n> · Stories: <n> · Tests: <created+run result | checkpoint-only>
+```
+
+On a checkpoint-only run (no `--apply`) the docs path is the one the apply WOULD write to,
+suffixed ` (not written — no --apply)`.
+
 ## Completion Status
 
 Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
