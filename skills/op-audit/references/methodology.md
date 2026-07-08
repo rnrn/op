@@ -44,8 +44,20 @@ Investor Risk (0-10) = 0.25·TechnicalSeverity + 0.20·Exploitability + 0.20·As
 ```
 
 Each dimension is scored 0–10 by the auditing agent. Findings rank by final (post-verification)
-severity, then by this score. This makes architecture/quality/perf issues directly comparable
+severity, then by this score. **Severity (the enum) is authoritative for ranking; the numeric
+score only breaks ties within one severity band** — keep the two coherent (do not float a
+`High` below a `Medium` on score). This makes architecture/quality/perf issues directly comparable
 to security issues on one scale. It is a reporting model, not a standard.
+
+**Minting a finding id** (the REUSE rules below assume ids already exist): a NEW finding gets
+`<DOMAIN-PREFIX>-<NN>` — the prefix from its domain (`SEC-SURFACE`, `SEC-SECRETS`, `ARCH`, `QUAL`,
+`PERF`, `TEST`, `SUPPLY`), `NN` the next free 2-digit number in that prefix. Never renumber or
+reuse a retired id across runs — stable ids are what make cross-run tracking work.
+
+**Scope-freeze — resolve re-export shims before scoping or flagging.** A short module anchor
+(`core.py`) may resolve to a thin re-export shim (`sys.modules[__name__] = _impl`, `from x import *`,
+a few-line top-level file re-exporting a real module elsewhere). Follow it to the real module and
+audit THAT; auditing the 8-line shim (or flagging its symbols "missing") is a false finding.
 
 ## Ledger schema — `audit-findings.json`
 

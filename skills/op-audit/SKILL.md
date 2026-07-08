@@ -18,7 +18,10 @@ walk the task list and confirm fixes instead of re-auditing everything.
 
 This skill **writes** report + ledger files under the audit directory and may create
 tracker issues. It never modifies source code. Default audit dir: `docs/audit/`
-(override with `--dir`). Confidentiality: run entirely **locally** against the working
+(override with `--dir`). **For a read-only pass** (auditing a repo you must not write into),
+`run`/`tasks` still write the ledger/report/tracker under the target — so instead point
+`--dir` at a path OUTSIDE the target, or use `status`/`plan` (which run no agents and write
+nothing), or render findings to the conversation only. Confidentiality: run entirely **locally** against the working
 tree — never send code or secrets to external services, never run active scans (DAST)
 against live systems, and **never print secret values** in the report or ledger
 (cite `file:line`, not contents). The audit engine reads source only and
@@ -48,7 +51,7 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 | `--tasks` | After a run, also run the `tasks` export (into the project's task/spec system). |
 | `--spec` | `run` mode: audit the planned backlog (units in the task/spec system) for quality/coverage/contradictions, joining the ledger under domain `spec`. |
 | `--scope <project\|charter>` | **Stance** (default `project` for `run`). `project` = DISCOVERY: audit the whole codebase, find anything — this *seeds* a remediation charter. `charter` = SCOPED: audit only `--paths` (a change/diff) against the plan — it *serves* a charter and never wanders project-wide. `verify` is inherently `charter`-scoped. |
-| `--paths <globs/files>` | With `--scope charter`: the exact changed surface to audit (the diff). Auditors must stay within it. |
+| `--paths <globs/files>` | With `--scope charter`: the exact changed surface to audit (the diff). Auditors must stay within it. **To audit ONE subsystem** (not a diff, not the whole repo): keep `--scope project` but pass the subsystem's globs as `--paths` as a discovery root — lanes explore within them instead of wandering project-wide. |
 | `--lanes <k,…>` | Restrict to specific lanes (keys: `appsec-secrets appsec-surface architecture supplychain quality cicd testing perf-sre`). |
 | `--system <name>` | Force the task/spec system for `tasks`: `bmad` \| `spec-kit` \| `beads` \| `markdown` \| `issues` \| `file` (default: auto-detect per `docs/spec-systems.md`). |
 | `--backend <b>` | Legacy alias for `--system` covering the file-based recipes: `beads` \| `planner` \| `file`. |
