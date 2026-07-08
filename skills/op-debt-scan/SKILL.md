@@ -82,7 +82,7 @@ Do not treat all TODOs or missing tests equally. For each MEDIUM or HIGH finding
 
 Sort by `priority-score` — **the HIGH/MEDIUM/LOW label is descriptive, not the sort key**, so a 1200-line HIGH can legitimately rank below a well-scored MEDIUM. On ties prioritize security, source-of-truth cleanup, and repeat incident classes. Mark noisy/low-value findings as backlog only.
 
-Protocol (non-negotiable, exact format): every MEDIUM and HIGH finding MUST carry a literal line of the shape `priority-score: N (user-impact=A, failure-likelihood=B, effort=C, architecture-impact=D, unblock-value=E)` where `N = (A+B+D+E)-C`. Severity ranking alone is NOT a substitute for this field.
+Protocol (non-negotiable, exact format): every MEDIUM and HIGH finding MUST carry a literal line of the shape `priority-score: N (user-impact=A, failure-likelihood=B, effort=C, architecture-impact=D, unblock-value=E)` where `N = (A+B+D+E)-C`. Severity ranking alone is NOT a substitute for this field. **Before emitting, re-verify each line's arithmetic** — recompute `(A+B+D+E)-C` and confirm it equals the stated `N`, and that the line matches the regex `priority-score: -?\d+ \(user-impact=\d, failure-likelihood=\d, effort=\d, architecture-impact=\d, unblock-value=\d\)`; a mismatch is a bug in the report, not a rounding choice.
 
 ## Output
 

@@ -18,10 +18,10 @@ walk the task list and confirm fixes instead of re-auditing everything.
 
 This skill **writes** report + ledger files under the audit directory and may create
 tracker issues. It never modifies source code. Default audit dir: `docs/audit/`
-(override with `--dir`). **For a read-only pass** (auditing a repo you must not write into),
-`run`/`tasks` still write the ledger/report/tracker under the target — so instead point
-`--dir` at a path OUTSIDE the target, or use `status`/`plan` (which run no agents and write
-nothing), or render findings to the conversation only. Confidentiality: run entirely **locally** against the working
+(override with `--dir`). **For a read-only pass** (auditing a repo you must not write into), pass `--report-only`
+(findings to the conversation, nothing written) — or point `--dir` outside the target, or use
+`status`/`plan` (which run no agents and write nothing). Bare `run`/`tasks` DO write the
+ledger/report/tracker under the target. Confidentiality: run entirely **locally** against the working
 tree — never send code or secrets to external services, never run active scans (DAST)
 against live systems, and **never print secret values** in the report or ledger
 (cite `file:line`, not contents). The audit engine reads source only and
@@ -34,6 +34,7 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 /op-audit --help              # same as bare invocation
 /op-audit plan                # staged remediation plan from the ledger (waves; ONE stage per pass)
 /op-audit run                 # full DISCOVERY audit (whole project) -> report + ledger
+/op-audit run --report-only   # read-only: findings to the conversation, write nothing
 /op-audit run --scope charter --paths "<changed>"   # SCOPED audit of a change vs the plan (no project-wide wandering)
 /op-audit run --spec          # audit the PLANNED backlog (specs/stories/tasks), not only code
 /op-audit run --dir docs/dd   # custom audit directory
@@ -48,6 +49,7 @@ never runs `git add`, `git commit`, or `git reset` on the project.
 | Argument | Meaning |
 |---|---|
 | `--dir <path>` | Audit directory (default `docs/audit/`). Holds `audit-findings.json` (ledger), `audit-report.md`, `audit-charter.md`. |
+| `--report-only` | (alias `--dry-run`) Read-only pass: run the lanes and render the findings to the conversation, but write NO ledger/report/tracker and touch nothing under the target. Use when auditing a repo you must not modify (mirrors the read-only default of op-debt-scan / op-story-finder). |
 | `--tasks` | After a run, also run the `tasks` export (into the project's task/spec system). |
 | `--spec` | `run` mode: audit the planned backlog (units in the task/spec system) for quality/coverage/contradictions, joining the ledger under domain `spec`. |
 | `--scope <project\|charter>` | **Stance** (default `project` for `run`). `project` = DISCOVERY: audit the whole codebase, find anything — this *seeds* a remediation charter. `charter` = SCOPED: audit only `--paths` (a change/diff) against the plan — it *serves* a charter and never wanders project-wide. `verify` is inherently `charter`-scoped. |
@@ -134,8 +136,17 @@ Status lifecycle: `open → in_progress → fixed → verified` (plus `wont_fix`
    The engine fans out the lanes, adversarially verifies every High/Critical finding
    (refuted ones are dropped), scores survivors, and returns
    `{ sevCounts, totalEffort, domainSummaries, findings[], synthesis }`.
-   If the Workflow tool is unavailable, fall back to spawning the same lanes as
-   sequential `Task` agents using the lane definitions in the script.
+   **If the Workflow tool is unavailable, fall back to sequential `Task` agents — one per lane**
+   (`--lanes` set, else the eight default lanes). Give each agent this shape: prompt = the audit
+   baseline (confidentiality, refute-stance, cite `file:line`, never print secrets) + the lane's
+   focus (from the lane table below) + the scope clause (whole repo for `project`, or `--paths` as
+   the discovery root) + REUSE the `knownFindings` ids; **output = the ledger `findings[]` shape**
+   from `references/methodology.md` — each finding carries `id` (mint `<DOMAIN-PREFIX>-<NN>`),
+   `domain`, `title`, `location` (`file:line`), `severity`, `investor_risk_score`, `confidence`,
+   `observation`, `impact`, `recommendation`, `effort_days`, and the `dimensions` sub-scores. Then
+   **you** do the adversarial-verify pass the engine would (re-read each High/Critical at its cited
+   `file:line`; drop refuted), score survivors, and merge. This is executable from this SKILL.md +
+   `references/methodology.md` alone — no Workflow runtime required.
 4. **Merge into the ledger (do NOT clobber status).** For each returned finding:
    - id exists in prior ledger → carry over `status`, `first_seen`, `task_ref`; refresh
      evidence/score; if it was `fixed`/`verified` but reappears, set `status:"regressed"`.
