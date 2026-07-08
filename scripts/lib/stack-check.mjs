@@ -32,6 +32,16 @@ const LANG_ALIAS = {
 };
 const normLang = (s) => { const k = String(s).replace(/[`'"*]/g, "").trim().toLowerCase(); return LANG_ALIAS[k] || k; };
 
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  console.log(`stack-check.mjs — flag files whose language is not in the declared stack (GP1 declared-wins).
+Usage: node <this>/scripts/lib/stack-check.mjs --declared "<langs>" --files "<a.py,b.go,...>"
+       node <this>/scripts/lib/stack-check.mjs --declared go --files-from changed.txt
+This script lives in the GLOBAL skills tree (~/.claude/scripts/lib/), NOT vendored per-project;
+from a skill, resolve it as path.resolve(<skillDir>/../../../scripts/lib/stack-check.mjs).
+Exit 0 = no deviation (or nothing to check) · 2 = deviation(s) listed.`);
+  process.exit(0);
+}
+
 const declared = new Set((arg("declared", "") || "").split(/[,\s]+/).filter(Boolean).map(normLang));
 let files = (arg("files", "") || "").split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
 const ff = arg("files-from", "");

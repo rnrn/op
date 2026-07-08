@@ -71,8 +71,8 @@ violation, same as the completion token):
 
 ```text
 Repository:    <upstream URL from `git -C <clone> remote get-url origin`; else "local clone, no remote">
-Upstream code: <ABSOLUTE path to the upstream clone, e.g. D:/project/upstreams/<PROJECT>>
-Upstream docs: <ABSOLUTE path to the generated docs, e.g. D:/project/upstreams_docs/<PROJECT>>
+Upstream code: <ABSOLUTE path to the upstream clone, e.g. /abs/path/upstreams/<PROJECT>>
+Upstream docs: <ABSOLUTE path to the generated docs, e.g. /abs/path/upstreams_docs/<PROJECT>>
 Range:         <analyzed range> · Epics: <n> · Stories: <n> · Tests: <created+run result | checkpoint-only>
 ```
 

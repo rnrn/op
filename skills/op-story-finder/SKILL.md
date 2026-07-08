@@ -31,23 +31,31 @@ The only argument is the keyword phrase. Tips:
 
 ## Workflow
 
-1. **Search the task/spec system's unit files:**
-   ```
-   Grep: "[keywords]" in docs/**/stories/*.md        # BMAD (default)
-   ```
-   Search the project's declared/detected system instead when it differs
-   (`AGENTS.md` Stack Profile, `docs/spec-systems.md`, `CLAUDE.md`, or
-   `docs/HANDBOOK.md`): spec-kit → `specs/**/tasks.md`; markdown → the backlog
-   files (`docs/tasks/*.md`, `TODO/BACKLOG`); BMAD → `docs/**/stories/*.md`.
-   (Tracker-based systems — beads/issues — are queried by op-planner/op-audit via
-   their CLIs; this read-only finder greps file-based units.) A project with no
-   units at all is a valid result — report it as `DONE` with "no units found", not
-   as a blocker.
-2. **Parse matches:**
-   - Extract story ID and title from `# Story X.Y: Title`
-   - Extract epic from `**Epic:**` line
-   - Extract status from `**Status:**` line
-   - Extract file path
+1. **Detect the layout FIRST — never default blindly to the BMAD glob.** Read
+   `docs/spec-systems.md` (and `AGENTS.md` Stack Profile / `CLAUDE.md` / `docs/HANDBOOK.md`)
+   to learn where this project keeps units, then grep the matching glob:
+   - **BMAD** → `docs/**/stories/*.md` (units `# Story X.Y: Title`).
+   - **spec-kit** → `specs/**/tasks.md`.
+   - **markdown backlog** → `docs/tasks/*.md`, `TODO`/`BACKLOG`.
+   - **flat-epic** → `docs/EPIC_*.md` with **inline** units `### Task N. <title> — <status>`
+     (also `## Task N`, `- [ ] …`); the container is the `# EPIC:` heading / filename, and an
+     `EPIC_*_INDEX.md` hub, when present, holds the authoritative open/done state. This layout
+     is common and the BMAD glob returns **zero** hits on it.
+   **Detection guard (prevents a false "no units"):** if the BMAD glob returns 0 files AND
+   `docs/spec-systems.md` (or any `docs/EPIC_*.md`) exists, STOP and follow the declared layout
+   before reporting empty. A genuinely empty project is `DONE` "no units found"; a mis-detected
+   one is a bug.
+   **Scope:** restrict globs to the declared docs root; **exclude non-authoritative copies** —
+   `.claude/worktrees/**`, `**/agent_workspaces/**`, `**/data/**`, `node_modules/**` — or every
+   finding triple-counts. (Tracker systems — beads/issues — are queried by op-planner/op-audit
+   via their CLIs; this read-only finder greps file-based units.)
+2. **Parse matches** (heading/field shapes vary by layout — handle all):
+   - ID + title: `# Story X.Y: Title` OR `### Task N. <title>` (unit id = `<EPIC-file>:TaskN`).
+   - Container/epic: `**Epic:**` line OR the `# EPIC:` heading / the epic filename.
+   - Status: `**Status:**` line OR the token(s) after the last `—`/inside `(…)` in the heading.
+     **A bare priority tag (`— P0`…`— P3`) is NOT a status** — treat it as open/unspecified and
+     consult any `EPIC_*_INDEX.md` for the authoritative open/done; never report `P0` as a status.
+   - Extract file path.
 3. **Return structured results** to the conversation (see Output).
 
 Integration with the doc-harvester agent — doc-harvester calls this skill before creating each story:

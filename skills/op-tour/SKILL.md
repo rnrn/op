@@ -29,15 +29,34 @@ conversation only.
 ## Workflow
 
 1. **Detect project type** from file structure: monorepo (multiple packages/services), single service (API, worker), library/SDK, CLI tool, full-stack app (frontend + backend), desktop/mobile GUI app, ML/data pipeline, embedded/firmware, game, or plugin/extension. If none fits, describe the archetype actually found — do not force the nearest listed one.
-2. **Read key files** when present: `README.md`, `AGENTS.md` / `CLAUDE.md` / project instruction files (including a declared Stack Profile), `docs/HANDBOOK.md`, `docs/task-intake.md`, `docs/docs-taxonomy.md`, `docs/subsystem-doc-contracts.md`, `docs/project-boundaries.md`, `docs/build-profiles.md`, `docs/**/architecture.md`, `docs/**/prd.md`, `docker-compose.yml`, and dependency manifests (`go.mod`, `package.json`, `Cargo.toml`, `pom.xml`/`build.gradle`, `*.csproj`, `requirements.txt`/`pyproject.toml`, `composer.json`, `Gemfile` — whatever the project's stack uses).
-3. **Check for BMAD/project-method structure**: `docs/*/epics/`, `docs/*/stories/`, and a sprint/board tracker if the project declares one.
+2. **Read key files** when present. Start with the project instruction file (`AGENTS.md` /
+   `CLAUDE.md`, incl. its Stack Profile + ownership/doc-map pointers) and any `docs/README.md`
+   doc-map, then **follow the pointers those declare** to the project's real docs — the names
+   below are DEFAULT EXAMPLES, not a required set; prefer declared docs over these and never
+   emit `DONE_WITH_CONCERNS` merely because a default name is absent. Common defaults:
+   `README.md`, `docs/HANDBOOK.md`, `docs/SUBSYSTEMS.md`, `docs/spec-systems.md`,
+   `docs/task-intake.md`, `docs/docs-taxonomy.md`, `docs/subsystem-doc-contracts.md`,
+   `docs/project-boundaries.md`, `docs/build-profiles.md`, `docs/**/architecture.md`,
+   `docs/**/prd.md`; dependency manifests (`go.mod`, `package.json`, `Cargo.toml`,
+   `pom.xml`/`build.gradle`, `*.csproj`, `requirements.txt`/`pyproject.toml`, `composer.json`,
+   `Gemfile`). **Compose:** enumerate **all** `docker-compose*.yml` — when several exist, list
+   each with its service set and identify the canonical local-dev contour (usually the one the
+   README quick-start invokes), not just the root `docker-compose.yml`.
+3. **Check for BMAD/project-method structure — by the declared layout**, not only the BMAD glob: check
+   `docs/spec-systems.md` first; else detect BMAD `docs/*/epics/` + `docs/*/stories/`, flat
+   `docs/EPIC_*.md` (with inline `### Task N …` units + any `EPIC_*_INDEX.md` hub), ADR logs,
+   beads, or issues — and report the backlog in whatever form the project actually declares. A
+   0-hit BMAD glob next to 40 flat epics is a detection miss, not an empty backlog.
 4. **Generate the tour sections**:
    - **Section 1: What Is This?** — name, purpose, goals (from PRD/README); who uses it and why.
    - **Section 2: Architecture** — high-level architecture (from architecture.md or inferred), key components and interactions, tech stack and why it was chosen.
    - **Section 3: Key Files** — entry points (`main.go`, `index.ts`, ...), configuration files, core business logic locations, test locations.
    - **Section 4: Getting Started** — prerequisites, setup steps (from README or docker-compose), how to run locally, how to run tests.
    - **Section 5: Development Workflow** — how a task moves from User Spec to epic/story, op-preflight, implementation, proof, op-docup, and closeout; which subsystem owns each major area and which docs are source of truth; whether `docs/project-boundaries.md` and `docs/build-profiles.md` exist or are explicitly `N/A`; how to test and deploy; the project's sprint/board workflow if it declares one.
-   - **Section 6: Current State** — active sprint status, last 5 commits (`git log`), open stories/tasks.
+   - **Section 6: Current State** — active sprint status; recent real activity via
+     `git log --no-merges -5 --format='%h %ci %s'` (skip merge noise, surface dates so it doesn't
+     read as stale) and the current branch from `git status` (work often sits on a non-main
+     branch); open stories/tasks.
 5. If `--section` is specified, output only the requested section.
 6. Output the tour to the conversation.
 

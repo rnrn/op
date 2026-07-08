@@ -30,9 +30,10 @@ conversation only.
 
 ## Workflow
 
-1. **Scan for code markers:** grep for `TODO`, `FIXME`, `HACK`, `XXX`, `WORKAROUND` comments; count and categorize by severity and location.
-2. **Check file complexity:** files > 500 lines (consider splitting), functions > 100 lines (consider refactoring), deeply nested code. These numbers are language-relative defaults — when the project declares its own budgets (file-budget baseline, `AGENTS.md` Stack Profile, or `docs/HANDBOOK.md`), the declared values replace them.
-3. **Find test coverage gaps:** source files without corresponding test files, thin test directories, critical paths without tests.
+1. **Scan for code markers:** grep for `TODO`, `FIXME`, `HACK`, `XXX`, `WORKAROUND` comments; count and categorize by severity and location. Treat `delete_me`/`deleteme`/`fill-this`/`fixme-later` stubs as a **stronger** sub-class than a plain `TODO`.
+   - **Suspicious-artifacts pass (highest-value, often the real finding):** flag tracked files that look like leaked state even though they carry no marker — a stray `nul`/`con` redirect artifact, `*.dump`, a large tracked JSON, or any file containing `system_prompt`/`secret`/`api_key`/private-key material. These score **HIGH** (potential secret/PII leak) and belong in the report regardless of the marker grep. (Only a name *containing* `bypass`/`insecure` that resolves to a defined safe boolean default is NOT a finding — don't flag legit feature flags.)
+2. **Check file complexity:** files > 500 lines (consider splitting), functions > 100 lines (consider refactoring), deeply nested code. These numbers are language-relative defaults — when the project declares its own **numeric** budgets (file-budget baseline, `AGENTS.md` Stack Profile, or `docs/HANDBOOK.md`), the declared values replace them. A Stack Profile / HANDBOOK that declares **no number** does NOT override the defaults — the 500/1000 defaults stand; don't over-search to confirm the negative.
+3. **Find test coverage gaps:** source files without corresponding test files, thin test directories, critical paths without tests. **Test-lookup order (apply consistently):** (a) a `test_<basename>` / `<basename>.test` / `<basename>_test` file **anywhere** under a `tests/`|`test/`|`__tests__/` tree — not just the source's own dir — else (b) the `<basename>` symbol referenced from any test file, else (c) genuinely missing. Basename-in-same-dir alone flips many files falsely.
 4. **Check architecture drift as debt** (if `docs/**/architecture.md` exists):
    - Undocumented features = documentation debt
    - Duplicate command surfaces, hidden wrappers, or two active docs paths for one user task = architecture debt
@@ -40,7 +41,7 @@ conversation only.
    - Hardcoded provider/client names where a registry or probe exists = integration debt
    - Documented but unimplemented features = implementation debt
 5. **Check project-method debt:** missing User Spec, missing proof, stale legacy docs, duplicate config sources, unowned subsystem boundaries.
-6. **Check dependency health:** outdated dependencies (if lock files exist), deprecated package usage, unused dependencies.
+6. **Check dependency health from manifests/lockfiles only:** read `requirements.txt`/`pyproject.toml`/`poetry.lock`/`package.json`/`package-lock.json`/`go.mod` etc. and note pinned-but-stale majors, deprecated packages, and unused declarations. **Do NOT run `pip`/`npm outdated`** — this skill's `allowed-tools` grant only `Bash(wc)` and `Bash(git log)`, so a live registry query is unexecutable as shipped; report staleness from the lockfile contents, not a live check.
 7. **Read the project's budget baseline as seeded debt** (when one exists): look for `scripts/file-budget-baseline.json` or a baseline path declared in `docs/feedback` or `AGENTS.md`. Each entry is a known-oversized file frozen at a recorded size with ratchet semantics:
    - file grew past its frozen size = ratchet violation -> MEDIUM finding (HIGH if it also crosses the project's hard gate);
    - file shrank = report as shrink progress, not a finding;
@@ -72,7 +73,14 @@ Do not treat all TODOs or missing tests equally. For each MEDIUM or HIGH finding
 | `unblock-value` | 1-5: whether fixing it unlocks other work |
 | `priority-score` | `(user-impact + failure-likelihood + architecture-impact + unblock-value) - effort` |
 
-Sort by `priority-score`; on ties prioritize security, source-of-truth cleanup, and repeat incident classes. Mark noisy/low-value findings as backlog only.
+**Anchor each 1–5 axis so two operators converge** (scores are otherwise unreproducible):
+- `user-impact`: 1 = internal-only cleanup · 3 = degrades a non-critical path · 5 = breaks a core user/operator flow or leaks data.
+- `failure-likelihood`: 1 = stable/isolated · 3 = changes occasionally · 5 = hot path, already broke or has no test.
+- `effort`: 1 = <20 lines / 1 file · 3 = one-module refactor · 5 = cross-cutting, many call sites.
+- `architecture-impact`: 1 = local · 3 = clarifies one boundary/source-of-truth · 5 = fixes a protocol/runtime-safety invariant.
+- `unblock-value`: 1 = unblocks nothing · 3 = unblocks one queued item · 5 = unblocks an epic/several tasks.
+
+Sort by `priority-score` — **the HIGH/MEDIUM/LOW label is descriptive, not the sort key**, so a 1200-line HIGH can legitimately rank below a well-scored MEDIUM. On ties prioritize security, source-of-truth cleanup, and repeat incident classes. Mark noisy/low-value findings as backlog only.
 
 Protocol (non-negotiable, exact format): every MEDIUM and HIGH finding MUST carry a literal line of the shape `priority-score: N (user-impact=A, failure-likelihood=B, effort=C, architecture-impact=D, unblock-value=E)` where `N = (A+B+D+E)-C`. Severity ranking alone is NOT a substitute for this field.
 
