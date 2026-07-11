@@ -93,6 +93,20 @@ function parseFrontmatter(content) {
   return { fields, fieldNames, body };
 }
 
+// Skill names that exist in the tree being validated (source: 25; dist: the 19
+// published — so a published skill referencing a repo-only skill fails validate:dist,
+// which is correct: the published set must be self-contained).
+let _knownSkills = null;
+function getKnownSkills() {
+  if (_knownSkills) return _knownSkills;
+  _knownSkills = new Set(
+    fs.readdirSync(skillsRoot, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+  );
+  return _knownSkills;
+}
+
 function validateSkill(skillDir) {
   const issues = [];
   const name = path.basename(skillDir);
@@ -126,6 +140,23 @@ function validateSkill(skillDir) {
     if (!allowedFields.has(key)) {
       issues.push(warn(`non-standard frontmatter field: ${key}`));
     }
+  }
+
+  // Dead cross-reference lint (EVAL-3): a token that LOOKS like a skill reference
+  // (op-*/upstream-* naming pattern) must name a skill that exists in THIS tree —
+  // SKILL_STANDARD: "Skill cross-references must use the exact published name".
+  // A token that merely EXTENDS a known name (op-watch-verdict-smoke) is a derived
+  // artifact (script/scenario), not a skill reference — skipped.
+  const knownSkills = getKnownSkills();
+  const refText = `${description}\n${body}`;
+  const seenDead = new Set();
+  for (const m of refText.matchAll(/\b((?:op|upstream)-[a-z][a-z0-9-]*)\b/g)) {
+    const tok = m[1];
+    if (knownSkills.has(tok) || seenDead.has(tok)) continue;
+    if ([...knownSkills].some((k) => tok.startsWith(`${k}-`))) continue; // derived artifact name
+    if (refText[m.index + tok.length] === "/") continue; // path segment (dir/), not a skill mention
+    seenDead.add(tok);
+    issues.push(fail(`dead cross-reference '${tok}' — no such skill in this tree (SKILL_STANDARD: exact published name)`));
   }
 
   const isPublished = publishedSkills === null || publishedSkills.has(name);
