@@ -67,6 +67,7 @@ const CONTRACTS = {
   "zoom compensation": /initialDevicePixelRatio\s*\/\s*currentDevicePixelRatio/,
   "scaled transform": /scale\(var\(--panel-scale\)\)/,
   "all tasks entrypoint": /id="all-tasks-button"/,
+  "whole-system scenario selected by default": /data-scenario="all"[^>]*aria-pressed="true"/,
   "shared epic filters": /id="epic-filters"/,
   "aggregate task body": /id="all-tasks-body"/,
   "shared selected epic state": /const selectedEpics\s*=\s*new Set\(epicNames\)/,
