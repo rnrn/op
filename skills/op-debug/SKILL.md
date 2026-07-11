@@ -85,7 +85,7 @@ attempt count visible if >1.
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — root cause found and the fix proposed (or applied under `--apply`), pattern swept, repro re-checked.
 - `DONE_WITH_CONCERNS` — fix found but pattern matches remain unfixed or validation is partial; list them.

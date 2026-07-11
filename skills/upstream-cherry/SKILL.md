@@ -75,7 +75,7 @@ The Apply Instructions section lists the exact commands but the run executes the
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — proposal and tests written (and changes applied with passing tests when `--apply` was passed).
 - `DONE_WITH_CONCERNS` — proposal written but with BLOCK items, sensitive files pending manual review, or failing tests.

@@ -83,7 +83,7 @@ that `CHANGELOG.md` was not modified.
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — preview generated (default) or `CHANGELOG.md` updated (`--apply`).
 - `DONE_WITH_CONCERNS` — section generated but some commits could not be

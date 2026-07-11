@@ -56,7 +56,7 @@ With `--dry-run`, report this layout plus per-file section outlines and drift fi
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — kit written (or fully planned under `--dry-run`) and validation passed.
 - `DONE_WITH_CONCERNS` — kit written but drift, missing scaffold files, or failed diagram rendering remain listed.

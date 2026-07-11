@@ -77,7 +77,7 @@ Checklist before finishing:
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` - task completed within the skill's scope.
 - `DONE_WITH_CONCERNS` - mostly complete, residual risks.

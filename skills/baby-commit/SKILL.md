@@ -118,7 +118,7 @@ No `--apply` / `--commit` in the request. Nothing staged, nothing committed.
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — checkpoint created; no commits in default mode (or all groups
   committed cleanly under `--apply`).

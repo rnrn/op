@@ -80,7 +80,7 @@ confirm before applying any of them.
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — drift report generated (and confirmed fixes applied, if `--fix`).
 - `DONE_WITH_CONCERNS` — report generated but some claims could not be verified; list them.

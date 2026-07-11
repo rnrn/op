@@ -211,8 +211,7 @@ Always end with the dashboard line: `Findings: <open> open · <verified> verifie
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line MUST start with exactly one token,
-followed by ` — <one-line reason>`:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — action completed (audit ran / ledger updated / tasks exported / status shown).
 - `DONE_WITH_CONCERNS` — completed but a lane failed, the toolchain was unavailable for

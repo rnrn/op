@@ -112,7 +112,7 @@ Both CLEAN-* exit 0 so `goal` stops; the token + `done:` line say whether it fin
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — this step completed and the campaign verdict is `CLEAN-DONE` (print the `VERDICT:` line above it).
 - `DONE_WITH_CONCERNS` — this step completed but the verdict is `CONTINUE` (more steps remain) or `CLEAN-HANDOFF` (loop stopped, not done: breaker tripped or units deferred/blocked); name the count.

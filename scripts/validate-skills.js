@@ -38,6 +38,12 @@ const allowedFields = new Set([
 ]);
 
 const SAFETY_CLASSES = new Set(["read-only", "checkpoint", "generator"]);
+
+// Completion-Status contract (SKILL-10): the per-skill reason texts legitimately differ,
+// but the protocol sentence and the token set are THE shared contract — canonical, guarded.
+const COMPLETION_PROTOCOL_LINE =
+  "Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:";
+const COMPLETION_TOKENS = ["DONE", "DONE_WITH_CONCERNS", "BLOCKED", "NEEDS_CONTEXT"];
 const TRIGGER_PHRASING = /use (when|to|this|after|before)|run (this )?(before|after|when)|triggers? when/i;
 const CYRILLIC = /[Ѐ-ӿ]/;
 
@@ -239,6 +245,23 @@ function validateStandard(skillDir, name, parsed, content, body, bodyLines, desc
     const text = fs.readFileSync(path.join(skillDir, entry), "utf8");
     if (text.includes("skill-payload: required")) continue;
     issues.push(fail(`${entry} inside the skill folder (human docs live at repo level; opt out with '<!-- skill-payload: required -->'; SKILL_STANDARD: Content placement & budgets)`));
+  }
+
+  // Completion-Status guard (SKILL-10): the section must exist, carry the CANONICAL
+  // protocol sentence byte-identically, and list exactly the 4 tokens in order.
+  // (Per-skill reason texts after each token legitimately differ — not guarded.)
+  const csIdx = body.search(/^## Completion Status/m);
+  if (csIdx < 0) {
+    issues.push(fail("missing '## Completion Status' section (SKILL_STANDARD body structure)"));
+  } else {
+    const csBlock = body.slice(csIdx);
+    if (!csBlock.includes(COMPLETION_PROTOCOL_LINE)) {
+      issues.push(fail("Completion Status protocol sentence drifted from the canonical text (see COMPLETION_PROTOCOL_LINE in validate-skills.js / SKILL_STANDARD)"));
+    }
+    const toks = [...csBlock.matchAll(/^- `([A-Z_]+)`/gm)].map((m) => m[1]);
+    if (toks.join(",") !== COMPLETION_TOKENS.join(",")) {
+      issues.push(fail(`Completion Status tokens must be exactly [${COMPLETION_TOKENS.join(", ")}] in order; found [${toks.join(", ")}]`));
+    }
   }
 
   const hasReadOnly = /^## Read-Only Contract/m.test(body);

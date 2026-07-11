@@ -93,7 +93,7 @@ No existing stories found for: "rate limiting"
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — search completed (with or without matches, including "no story docs found").
 - `DONE_WITH_CONCERNS` — search completed but some story files were unparseable; list them.

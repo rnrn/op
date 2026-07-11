@@ -81,7 +81,7 @@ suffixed ` (not written — no --apply)`.
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens (an optional ` — <one-line reason>` may follow the token; nothing else). Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — checkpoint written (and real docs + passing tests when `--apply` was passed).
 - `DONE_WITH_CONCERNS` — artifact written but residual risks (failing accuracy tests, undocumented areas).

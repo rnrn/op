@@ -108,7 +108,7 @@ Protocol (non-negotiable, exact format): every MEDIUM and HIGH finding MUST carr
 
 ## Completion Status
 
-Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, followed by ` — <one-line reason>`. Do not invent other status wording:
+Protocol (non-negotiable): the VERY LAST line of every run MUST start with exactly one of these tokens, as plain text — no markdown emphasis or backticks around the token. An optional ` — <one-line reason>` may follow the token; nothing else. Do not invent other status wording:
 
 - `DONE` — scan completed and report generated.
 - `DONE_WITH_CONCERNS` — scan completed but parts were skipped (e.g. no lock files, no architecture docs); list them.
