@@ -1,5 +1,8 @@
 # op-audit Skill — Methodology & Ledger Schema
 
+**Contents:** [Why multi-agent, and the run order](#why-multi-agent-and-the-run-order) · [The seven default lanes](#the-seven-default-lanes) · [Investor Risk Score](#investor-risk-score) · [Ledger schema — `audit-findings.json`](#ledger-schema--audit-findingsjson) · [beads task export](#beads-task-export)
+
+
 Reference material for the `op-audit` skill. Loaded on demand; not part of the SKILL body.
 
 ## Why multi-agent, and the run order

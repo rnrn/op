@@ -1,5 +1,8 @@
 # Planner Conventions
 
+**Contents:** [File Naming Conventions](#file-naming-conventions) · [Track Detection Rules](#track-detection-rules) · [Acceptance Criteria Guidelines](#acceptance-criteria-guidelines) · [Scope Rules](#scope-rules) · [MVP vs Production](#mvp-vs-production) · [Status Flow](#status-flow)
+
+
 Reference material for track detection, naming, acceptance criteria, scoping,
 and status flow. Loaded on demand from SKILL.md.
 

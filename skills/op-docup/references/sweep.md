@@ -1,5 +1,8 @@
 # DocUp sweep mode — mechanics
 
+**Contents:** [Why bounded + resumable](#why-bounded--resumable) · [The plan-file (source of truth for resume)](#the-plan-file-source-of-truth-for-resume) · [Phase 1 — scope-freeze (deterministic, metadata only)](#phase-1--scope-freeze-deterministic-metadata-only) · [Phase 2 — per-segment pass (sequential, the MVP)](#phase-2--per-segment-pass-sequential-the-mvp) · [Phase 3 — merge (once, when all segment tasks are done)](#phase-3--merge-once-when-all-segment-tasks-are-done) · [Idempotency & safety](#idempotency--safety) · [Tier-1 accelerator (subagent fan-out)](#tier-1-accelerator-subagent-fan-out) · [Driver loop (reliable completion on stall-prone / weak models)](#driver-loop-reliable-completion-on-stall-prone--weak-models)
+
+
 Reference for the resumable, segment-bounded sweep (`--sweep`). The SKILL body
 states *when* and *what*; this file states *how*. MVP is the **sequential**
 (Tier-2) pass — portable, runs on any host (no subagent tool required).
