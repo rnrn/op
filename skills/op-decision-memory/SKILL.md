@@ -61,7 +61,7 @@ Lifecycle placement: after epic implementation (accepted architecture/config/pro
 
 ## Output
 
-Default-mode report:
+Default-mode report — **must contain exactly these lines/sections** (`Scanned:`, `Already recorded:`, `Proposed decisions`), and every proposal carries `[category]` + decision + `Rationale:` + `Evidence:`:
 
 ```
 ## Decision Memory Report

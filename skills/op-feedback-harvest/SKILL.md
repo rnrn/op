@@ -50,7 +50,7 @@ Promote a candidate only when it is durable (prevents future regressions), actio
 
 Return to the conversation: commit range inspected, checkpoint path, rule files proposed/changed, duplicate count and targets, selected/rejected commit counts, remaining `WATCH` items.
 
-Write checkpoints to `docs/feedback/audits/op-feedback-harvest-YYYYMMDD-HHMM.md` with this shape:
+Write checkpoints to `docs/feedback/audits/op-feedback-harvest-YYYYMMDD-HHMM.md` — it **must contain exactly these sections, in order** (`## Selected Commits`, `## Rejected Commits`, `## Proposed Rules`, `## Index Updates`, `## Open Questions`):
 
 ```markdown
 # Feedback Harvest YYYY-MM-DD HH:MM
