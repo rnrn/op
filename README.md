@@ -68,7 +68,7 @@ Repo-committed mp4 files do not render as a player inside README.
 
 ### Skills (`skills/`)
 
-The 16 published skills. Every skill declares a safety class (see
+The 20 published skills. Every skill declares a safety class (see
 `docs/SKILL_STANDARD.md`): **read-only** skills never write files,
 **checkpoint** skills write only a checkpoint artifact by default and require
 explicit `--apply`/`--commit` for real mutations, and the **generator** skill
@@ -85,6 +85,10 @@ writes only inside its dated output directory.
 | **op-feedback-harvest** | Harvest durable feedback rules from commits, bugs, reviews, and incidents | checkpoint |
 | **op-debt-scan** | Scan technical debt indicators and missing-test pressure, ranked by priority score | read-only |
 | **op-drift-check** | Check architecture drift between documentation and actual code | read-only |
+| **op-audit** | Multi-lane due-diligence audit with adversarial verification; maintains the `audit-findings.json` ledger across runs | generator (ledger + report) |
+| **op-debug** | Root-cause one confirmed defect end-to-end: reproduce, minimal fix, verify | checkpoint |
+| **op-watch** | Drive a remediation/build campaign to done one bounded step per call under a `goal` loop | checkpoint (campaign state) |
+| **runtime-map-updater** | Maintain an interactive HTML runtime/architecture map as a verified artifact synced from docs and open tasks | checkpoint |
 | **project-doc-kit** | Generate a dated full project documentation kit with architecture, contracts, code map, history, debt, diagrams, and optional DOCX | generator (`docs/<YYYYMMDD>/` only) |
 | **upstream-harvest** | Analyze upstream commits and generate BMAD BMM docs + tests; checkpoint first | checkpoint |
 | **upstream-cherry** | Cherry-pick upstream changes with air-gap testing; proposal + tests are the checkpoint | checkpoint |
