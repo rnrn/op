@@ -39,7 +39,8 @@ detached worktree and strand later steps).
    P0 = critical/blocking/security, P1 = important features and bugs,
    P2 = nice-to-have polish.
 2. **Determine the task/spec system, then explore existing units** — read the
-   Stack Profile `Task / spec system` or detect it (`docs/spec-systems.md`).
+   Stack Profile `Task / spec system` or detect it (`docs/spec-systems.md`). **If
+   neither declares a system, default to BMAD** (`docs/*/epics/` + `docs/*/stories/`).
    Explore existing units in THAT system (BMAD: Glob `docs/*/epics/*.md` and
    `docs/*/stories/*.md`; spec-kit: `specs/*/tasks.md`; beads: `bd list`;
    markdown: the backlog files). If present, also read `docs/HANDBOOK.md`,
@@ -47,9 +48,14 @@ detached worktree and strand later steps).
    `docs/docs-taxonomy.md` and respect their contracts (User Spec for
    operator-facing work; contract/runtime rung/owner/source-of-truth/proof
    path for structural work).
-3. **Check for duplicates** — search existing stories for the same capability;
-   never create a parallel docs track when an existing track or owner already
-   covers the work.
+3. **Check for duplicates AND target-existence** — search existing stories for the
+   same capability (use `op-story-finder` when available); never create a parallel
+   docs track when an existing track or owner already covers the work. **Before
+   proposing a unit that references specific files/functions/subsystems, verify they
+   still EXIST** (`glob`/`find`/`grep`) — a request framed against code a later story
+   deleted or dropped is obsolete: STOP, do not plan it, and emit `DONE_WITH_CONCERNS`
+   naming the story that removed the target. (Requests carry stale framing — trust the
+   repo, not the request's "status" claims.)
 4. **Pick track, epic, and number** — prefer an existing track, then derive
    from referenced file paths, then from project structure, then a semantic
    name. Select the best-fit epic or justify a new one; next story number is
@@ -72,9 +78,16 @@ detached worktree and strand later steps).
    in that language by default; a polyglot spec (e.g. Python reference code in a Go
    repo) must not silently set the implementation language.
 6. **Write `PLANNER_CHECKPOINT.md`** — required sections listed under Output;
-   keep it under 140 lines.
+   keep it under 140 lines. **Before overwriting an existing checkpoint, check its
+   `## 1. Request Summary`:** if it plans a DIFFERENT request, note in the new
+   checkpoint that you clobbered an unrelated stale plan (single-slot file) rather
+   than silently discarding it.
 7. **Apply gate** — only if the user explicitly passed `--apply` in the same
-   request: materialize the real unit **in the detected system's format** (BMAD:
+   request. **`--apply` must NOT materialize a unit the checkpoint marked obsolete or
+   duplicate** — withhold and report (the write gate serves the plan, it doesn't
+   override a stop). When the best-fit epic is `Status: Done`/closed, appending new
+   work to it needs an explicit justification line (or a new epic). Otherwise:
+   materialize the real unit **in the detected system's format** (BMAD:
    write the story file + update the epic story table; spec-kit: append a
    `tasks.md` row + `spec.md`/`plan.md` stub; beads: `bd create`; markdown: a task
    entry — see `docs/spec-systems.md`), and — only when the project already tracks

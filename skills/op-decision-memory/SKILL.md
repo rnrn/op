@@ -35,14 +35,14 @@ nothing else. Write files only — never run `git add`, `git commit`, or
 | `--query <keyword>` | Read existing `docs/decisions/decisions.yaml`, search decisions by keyword in decision, rationale, category; display matches with full context (read-only) |
 | `--export` | Generate `docs/decisions/DECISIONS.md` as a formatted markdown table, grouped by category, sorted by date (requires `--apply`) |
 
-Lifecycle placement: after epic implementation (accepted architecture/config/protocol/security/deploy decisions); after a significant story (only if it creates a reusable decision or tradeoff); after a commit batch (decisions made implicitly in code but not documented); after project reorganization (ownership boundaries, docs taxonomy, source-of-truth moves). When the project defines an Epic Closure Gate (in `AGENTS.md`), this skill is part of that gate: run it before the epic's status flips to DONE, not ad hoc afterwards. Not a replacement for `op-docup` (which syncs stories/epics/notes) and not transcript memory — this is decision-log/ADR memory only.
+Lifecycle placement: after epic implementation (accepted architecture/config/protocol/security/deploy decisions); after a significant story (only if it creates a reusable decision or tradeoff); after a commit batch (decisions made implicitly in code but not documented); after project reorganization (ownership boundaries, docs taxonomy, source-of-truth moves). When the project defines an Epic Closure Gate (in `AGENTS.md`), this skill is part of that gate: run it before the epic's status flips to DONE, not ad hoc afterwards. Not a replacement for `op-docup` (which syncs stories/epics/notes) and not transcript memory — this is decision-log/ADR memory only. **ADR vs changelog:** `changelog`/release-notes record WHAT shipped per release; this records WHY a technical choice was made and what was rejected (the `rationale` + `alternatives` fields) — the two never share an entry.
 
 ## Workflow
 
-1. Read existing decisions from `docs/decisions/decisions.yaml` (if any).
+1. Read existing decisions from `docs/decisions/decisions.yaml` (if any). On a virgin log (no file / no entries), seed the first id at `ADR-001`.
 2. Scan the completed epic/story notes and `git log` for the last N commits; look for keywords like "migrate", "switch", "replace", "upgrade", "add", "remove" and detect new dependencies, config changes, framework switches, API changes.
-3. Identify commits with architectural significance.
-4. For each significant change: read the changed files, determine what decision was made, extract rationale from commit message/PR description, note alternatives considered, and check whether the decision is already recorded.
+3. Identify commits with architectural significance. **Granularity: one ADR per durable decision, not per commit** — collapse a multi-commit epic into the smallest set of decisions a future maintainer would each want to revisit independently (do NOT emit one ADR per commit; do NOT split one decision across several).
+4. For each significant change: read the changed files, determine what decision was made, **extract rationale from the story/epic notes FIRST, then the commit message/PR description** (story docs usually carry the "why" that terse commits omit), note alternatives considered, and check whether the decision is already recorded.
 5. Categorize each decision:
 
    | Category | Triggers |

@@ -8,7 +8,9 @@ Before assigning `APPLY`, compare each candidate against existing
 
 1. Search the target file and nearby rule files for the same nouns and verbs.
 2. Check whether an existing rule already covers the same trigger, invariant,
-   and preflight action.
+   and preflight action. **Read the matched rule's Good/Bad body before deciding
+   DUPLICATE — not just its title/nouns:** a noun-match can look weak while the
+   rule's exemplar already covers your candidate exactly (or vice-versa).
 3. If covered, mark:
    - `Status: DUPLICATE`
    - `Duplicate of: <file>#<rule-id>`
@@ -21,6 +23,11 @@ Before assigning `APPLY`, compare each candidate against existing
    adds a distinct check or updates the existing rule instead of creating a
    parallel rule.
 6. If unsure, mark `WATCH`, not `APPLY`.
+7. **Rule outlived its trigger surface:** if the code/incident that motivated a
+   rule was itself deleted or superseded within the window (the rule is durable as
+   an authoring invariant but has no live trigger), mark `WATCH` with an explicit
+   promote-on-resurrection condition — not `APPLY` (nothing to guard yet) and not a
+   silent `REJECT` (the lesson is still true).
 
 Examples:
 

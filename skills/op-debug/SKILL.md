@@ -38,8 +38,14 @@ let it raise and trace WHY it is missing.
 
 ## Workflow
 
-1. **Reproduce** — get the exact error and a minimal repro command. If you cannot
-   reproduce it, say so and stop (`NEEDS_CONTEXT`/`BLOCKED`) — do not guess-fix.
+1. **Reproduce** — get the exact error and a minimal repro command. **Static
+   confirmation** (reading the exact bad-value code path) counts as reproduction when
+   no runtime repro is cheap — e.g. a fail-open access check on a WS handler; record
+   the `file:line` you inspected as the Repro instead of a command. If you cannot
+   reproduce it at all, say so and stop (`NEEDS_CONTEXT`/`BLOCKED`) — do not guess-fix.
+   **If the reported defect is already remediated at HEAD** (the fix is present / the
+   bad path no longer exists), emit `DONE — already fixed` citing the commit + the
+   `file:line` that proves it; do not fabricate a patch.
 2. **Trace backward to the source** — follow the bad value from the symptom
    *upstream* to where it was first produced (the wrong assignment, the unhandled
    branch, the bad input). Fix where it originates, not where it surfaces.
@@ -51,9 +57,11 @@ let it raise and trace WHY it is missing.
 5. **One fix at the source** — the smallest change that addresses the root cause.
    On `--apply`, write it; otherwise propose it with the exact `file:line`.
 6. **Anti-whack-a-mole sweep** — name the bug's *pattern* in one sentence, then
-   `grep` the repo for the same shape. Fix trivial matches in the **same** change;
-   file the rest as follow-ups. (Stops the reviewer finding the same class four
-   more times.)
+   `grep` the repo for the same shape. This is a **targeted same-pattern grep, not
+   project-wide discovery** — do not enumerate unrelated modules (that is op-audit).
+   Under `--apply`, fix trivial matches in the same change; otherwise list them as
+   proposed follow-ups in the report (as bullets, or as tasks if the project uses
+   op-planner). (Stops the reviewer finding the same class four more times.)
 7. **Bounded validation** — add a check one or two layers past the fix (not
    scattered everywhere) and re-run the repro to confirm the failure is gone for
    the right reason.

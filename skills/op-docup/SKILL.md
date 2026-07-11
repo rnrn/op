@@ -46,6 +46,12 @@ report the epic as synced. Projects that define an Epic Closure Gate in
 
 ## Workflow
 
+0. **Locate the sync baseline** (the "checkpoint" in the skill's name — make it a
+   real, discoverable thing, don't silently equate it with "recent commits"): check a
+   declared last-sync marker in this order — a `docs/.docup/` state file, a prior
+   `DOCUP_CHECKPOINT.md`, or a last-sync field in `AGENTS.md`/`docs/HANDBOOK.md`. If
+   none exists, fall back to `--commits=N` recent history and **state in §1 that no
+   sync baseline was found** (so the window is explicit, not assumed).
 1. **Gather bounded change evidence** — `git status --short`,
    `git log --oneline -5` (or `--commits=N`), `git diff --stat`. If the
    request names specific files, diff those files; otherwise use a bounded
@@ -64,7 +70,10 @@ report the epic as synced. Projects that define an Epic Closure Gate in
    illustrative examples; any stack's top-level modules work the same way,
    e.g. `internal/ui/...` -> `ui`, `blocks/...` -> `pipeline`);
    changes under `docs/` need no mapping. Decide per change: update an
-   existing story, create a new story, or no-docs-needed with a reason.
+   existing story, create a new story, no-docs-needed with a reason, **or
+   index/table-only update** — the common case where the story body already
+   documents the change but a parent epic story-table or track index omits or
+   misstates the unit (the story is synced; the rollup drifted).
 4. **Respect project contracts** — if `docs/HANDBOOK.md` exists, check
    whether the change affects contract, runtime rung, owner subsystem,
    source of truth, or proof path; update taxonomy/index docs instead of only
@@ -82,6 +91,9 @@ report the epic as synced. Projects that define an Epic Closure Gate in
    request: update existing stories (mark completed ACs `[x]`, set status,
    add implementation notes) and create new stories using the template in
    `references/templates.md`, updating epic story tables and track indexes.
+   **Row/table values written on `--apply` MUST be re-derived from the referenced
+   story/epic files at apply time** — the checkpoint's proposed values are a
+   hypothesis, not a source of truth (a stale-header guess must not propagate).
    Otherwise state in the checkpoint that no real docs were written.
 
 Read `references/templates.md` when applying (BMAD story-update template).
