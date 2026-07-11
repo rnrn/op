@@ -4,7 +4,19 @@ const fs = require("fs");
 const path = require("path");
 
 const repoRoot = path.resolve(__dirname, "..");
-const skillsRoot = path.resolve(process.argv[2] || path.join(repoRoot, "skills"));
+
+// Usage: node scripts/validate-skills.js [<skills-dir>]
+// The single optional POSITIONAL arg is a skills tree to validate (defaults to this
+// repo's skills/) — the dry-run mechanism for rename/refactor checks on a temp copy.
+const rawArg = process.argv[2];
+if (rawArg && rawArg.startsWith("-")) {
+  console.log(`usage: node scripts/validate-skills.js [<skills-dir>]
+  <skills-dir>   optional POSITIONAL path to a skills tree (each <dir>/<skill>/SKILL.md);
+                 defaults to this repo's skills/. No flags — use a temp copy of the tree
+                 for rename/refactor dry-runs. Exit 1 on any error-level issue.`);
+  process.exit(2);
+}
+const skillsRoot = path.resolve(rawArg || path.join(repoRoot, "skills"));
 
 // Strict standard checks (docs/SKILL_STANDARD.md) apply to published skills
 // only. In the dist tree build-dist.js is absent — there every skill present
