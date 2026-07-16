@@ -1,17 +1,17 @@
 {
-  "name": "crateon-bundle",
+  "name": "op-skills",
   "version": "0.9.0",
   "private": false,
   "description": "Portable Claude Code and Codex skill bundle for operational development workflows.",
   "license": "MIT",
   "author": {
-    "name": "Crateon"
+    "name": "rnrn"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/crateon-dev/crateon-bundle.git"
+    "url": "https://github.com/rnrn/op.git"
   },
-  "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
+  "homepage": "https://github.com/rnrn/op#readme",
   "keywords": [
     "claude-code",
     "codex",

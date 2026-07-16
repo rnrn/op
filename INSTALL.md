@@ -89,7 +89,7 @@ Present a short plan to the user before writing anything:
    never overwrite — if `docs/feedback/index.md` exists, add missing index
    entries instead of replacing the file.
 3. Commit the scaffold as its own commit (`docs(method): add feedback
-   scaffold from crateon-bundle`), touching nothing else. Respect the dirty
+   scaffold from op-skills`), touching nothing else. Respect the dirty
    tree: do not mix scaffold files with the user's in-flight changes.
 
 ### Phase 4 — Verify

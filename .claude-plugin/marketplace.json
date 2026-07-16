@@ -1,13 +1,13 @@
 {
-  "name": "crateon-bundle",
+  "name": "op-skills",
   "owner": {
-    "name": "Crateon",
-    "url": "https://github.com/crateon-dev"
+    "name": "rnrn",
+    "url": "https://github.com/rnrn"
   },
   "metadata": {
     "description": "A GitHub-installable Claude Code skill marketplace for operational development cycles: onboard, find existing work, plan, preflight, implement, update docs, capture decisions, harvest feedback, and audit drift/debt.",
-    "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
-    "repository": "https://github.com/crateon-dev/crateon-bundle",
+    "homepage": "https://github.com/rnrn/op#readme",
+    "repository": "https://github.com/rnrn/op",
     "license": "MIT"
   },
   "plugins": [
@@ -17,9 +17,9 @@
       "description": "Daily development lifecycle skills. Install this group when a project needs a repeatable path from task intake to implementation closeout and periodic drift/debt review. Pair with documentation-kits when a full dated project documentation snapshot is needed.",
       "version": "0.9.0",
       "author": {
-        "name": "Crateon"
+        "name": "rnrn"
       },
-      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "repository": "https://github.com/rnrn/op",
       "license": "MIT",
       "keywords": [
         "development-workflow",
@@ -61,9 +61,9 @@
       "description": "Git and release hygiene skills for dry commit planning, baby-step commits, and changelog maintenance.",
       "version": "0.9.0",
       "author": {
-        "name": "Crateon"
+        "name": "rnrn"
       },
-      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "repository": "https://github.com/rnrn/op",
       "license": "MIT",
       "keywords": [
         "git",
@@ -90,9 +90,9 @@
       "description": "Upstream repository research skills for harvesting commits, issues, pull requests, and cherry-pick candidates into project planning artifacts.",
       "version": "0.9.0",
       "author": {
-        "name": "Crateon"
+        "name": "rnrn"
       },
-      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "repository": "https://github.com/rnrn/op",
       "license": "MIT",
       "keywords": [
         "upstream",
@@ -121,9 +121,9 @@
       "description": "Batch documentation snapshot skills for generating dated onboarding, architecture, integration, delivery-map, debt, and optional DOCX project documentation kits.",
       "version": "0.9.0",
       "author": {
-        "name": "Crateon"
+        "name": "rnrn"
       },
-      "repository": "https://github.com/crateon-dev/crateon-bundle",
+      "repository": "https://github.com/rnrn/op",
       "license": "MIT",
       "keywords": [
         "documentation",

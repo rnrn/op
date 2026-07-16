@@ -1,13 +1,13 @@
 {
-  "name": "crateon-bundle",
+  "name": "op-skills",
   "version": "0.9.0",
   "description": "Portable operational development workflow skills for project intake, planning, preflight, documentation closeout, decision memory, feedback harvesting, and drift/debt audits.",
   "author": {
-    "name": "Crateon",
-    "url": "https://github.com/crateon-dev"
+    "name": "rnrn",
+    "url": "https://github.com/rnrn"
   },
-  "homepage": "https://github.com/crateon-dev/crateon-bundle#readme",
-  "repository": "https://github.com/crateon-dev/crateon-bundle",
+  "homepage": "https://github.com/rnrn/op#readme",
+  "repository": "https://github.com/rnrn/op",
   "license": "MIT",
   "keywords": [
     "codex",
@@ -21,17 +21,17 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Crateon Bundle",
+    "displayName": "op skills",
     "shortDescription": "Operational development workflow skills for Codex.",
     "longDescription": "Portable skills for repeatable project onboarding, story discovery, planning, preflight checks, documentation closeout, decision capture, feedback harvesting, upstream research, and drift/debt audits.",
-    "developerName": "Crateon",
+    "developerName": "rnrn",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
       "Write",
       "Research"
     ],
-    "websiteURL": "https://github.com/crateon-dev/crateon-bundle",
+    "websiteURL": "https://github.com/rnrn/op",
     "defaultPrompt": [
       "Use op-tour to map this project before creating tasks.",
       "Use op-preflight before implementing this change.",
