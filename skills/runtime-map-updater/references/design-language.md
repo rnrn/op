@@ -85,11 +85,15 @@ SVG paths under the nodes (`z-index` below cards), `stroke-linecap/join: round`:
 
 - Horizontal, scrollable if narrow; mono uppercase label first; buttons with irregular radius,
   neutral until hover (accent border), pressed = **filled** accent with dark text.
-- **Fixed button order:** first — "Вся система" (`data-scenario="all"`), **selected on load**
-  (`aria-pressed="true"`): every node and edge lit, nothing dimmed — the resting state of the
-  board. Second — the gold-outlined all-tasks button. Route scenarios follow. Selecting a route
-  narrows the view (untouched nodes dim to 0.2); re-clicking the active route returns to
-  whole-system, never to an all-dimmed board.
+- **Fixed button order:** first — the whole-system button ("Вся система" / "Whole system",
+  `data-scenario="all"`), **selected on load** (`aria-pressed="true"`): every node and edge lit,
+  nothing dimmed — the resting state of the board. Second — the gold-outlined all-tasks button.
+  Route scenarios follow. Selecting a route narrows the view (untouched nodes dim to 0.2);
+  re-clicking the active route returns to whole-system, never to an all-dimmed board.
+- **Language versions:** an artifact may ship in several languages (`<name>.html` +
+  `<name>.en.html`, cross-linked from the eyebrow). Only visible labels translate — `data-node`,
+  `data-service`, `data-scenario`, ids, and task references stay English/canonical so the
+  validator and the catalog parity work identically on every version.
 - When a scenario is active, show a pinned **scenario note** (bottom-right of the board): a small
   annotation card with a 3px accent left border, mono text, accent-colored title line —
   one sentence on what the highlighted route (or the whole system) does.
