@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crateon Bundle — Toolchain Runtime Map</title>
+<style>
+  :root {
+    --ink: #f5f1df;
+    --muted: #9d9b91;
+    --board: #0b0d0d;
+    --board-soft: #111514;
+    --line: #343a37;
+    --mint: #57f0b2;
+    --gold: #ffd166;
+    --coral: #ff6f61;
+    --cyan: #65d6ff;
+    --violet: #c4a7ff;
+    --shadow: rgba(0, 0, 0, 0.42);
+    --ui: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    --marker: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    --panel-scale: 1;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { min-width: 320px; background: var(--board); scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      var(--board);
+    background-size: 28px 28px;
+  }
+  button { font: inherit; }
+  .page { min-height: 100vh; padding: 24px clamp(16px, 3vw, 44px) 36px; overflow: hidden; }
+
+  .topbar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end;
+    max-width: 1600px; margin: 0 auto 22px;
+  }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 9px; color: var(--mint);
+    font: 700 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.16em;
+  }
+  .eyebrow::before {
+    width: 28px; height: 2px; content: ""; background: currentColor;
+    box-shadow: 8px 4px 0 -0.5px currentColor; transform: rotate(-2deg);
+  }
+  h1 { max-width: 860px; margin: 0; font: 700 clamp(30px, 4vw, 54px)/0.98 var(--marker); text-wrap: balance; }
+  .subtitle { max-width: 780px; margin: 12px 0 0; color: #c8c6bb; font-size: clamp(13px, 1.2vw, 16px); line-height: 1.55; }
+  .status-stamp {
+    min-width: 174px; padding: 12px 16px 10px; border: 2px solid var(--gold); color: var(--gold);
+    font: 700 11px/1.45 var(--mono); text-align: center; text-transform: uppercase;
+    transform: rotate(1.3deg); box-shadow: 3px 3px 0 rgba(255, 209, 102, 0.18);
+  }
+
+  .scenario-bar {
+    display: flex; gap: 8px; align-items: center; max-width: 1600px; margin: 0 auto 14px;
+    overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 2px 2px 7px;
+  }
+  .scenario-label {
+    flex: 0 0 auto; margin-right: 8px; color: var(--muted);
+    font: 700 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .scenario-button {
+    position: relative; flex: 0 0 auto; min-height: 34px; padding: 7px 13px;
+    border: 1px solid #424844; border-radius: 3px 6px 4px 5px; color: #babdb5;
+    background: rgba(17, 21, 20, 0.9); cursor: pointer;
+    transition: color 160ms ease, border-color 160ms ease, transform 160ms ease, background 160ms ease;
+  }
+  .scenario-button:hover, .scenario-button:focus-visible {
+    color: var(--ink); border-color: var(--mint); outline: none; transform: translateY(-1px) rotate(-0.3deg);
+  }
+  .scenario-button[aria-pressed="true"] { color: #07110d; border-color: var(--mint); background: var(--mint); font-weight: 800; }
+  #all-tasks-button { border-color: var(--gold); color: var(--gold); }
+  #all-tasks-button:hover, #all-tasks-button:focus-visible {
+    color: #17140a; border-color: var(--gold); background: var(--gold); outline: none; transform: translateY(-1px);
+  }
+
+  .board-shell {
+    position: relative; max-width: 1600px; margin: 0 auto; border: 1px solid #303632;
+    background:
+      radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.028), transparent 20%),
+      rgba(9, 12, 11, 0.94);
+    box-shadow: 0 22px 70px var(--shadow), inset 0 0 0 5px rgba(255, 255, 255, 0.008);
+  }
+  .board-shell::before, .board-shell::after {
+    position: absolute; z-index: 5; width: 64px; height: 18px; content: "";
+    background: rgba(220, 207, 165, 0.15); border: 1px solid rgba(255, 255, 255, 0.08); pointer-events: none;
+  }
+  .board-shell::before { top: -7px; left: 7%; transform: rotate(-3deg); }
+  .board-shell::after { right: 8%; bottom: -7px; transform: rotate(2deg); }
+  .board { position: relative; min-height: clamp(720px, 54vw, 860px); isolation: isolate; overflow: hidden; }
+
+  .layer-label {
+    position: absolute; z-index: 2; color: #777d78; font: 700 9px/1 var(--mono);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .layer-label::after { display: block; width: 48px; margin-top: 6px; border-bottom: 1px dashed #3b413d; content: ""; }
+  .layer-label--flow { top: 18px; left: 2%; }
+  .layer-label--platform { top: 44%; left: 2%; }
+  .layer-label--target { top: 74%; left: 2%; }
+
+  .connections { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .edge {
+    fill: none; stroke: #4a514d; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.28; vector-effect: non-scaling-stroke;
+    transition: opacity 200ms ease, stroke 200ms ease, stroke-width 200ms ease;
+  }
+  .edge-shadow { transform: translate(2px, 1px); opacity: 0.12; }
+  .edge.is-active {
+    stroke: var(--edge-color, var(--mint)); stroke-width: 3.2; opacity: 0.95;
+    stroke-dasharray: 10 8; animation: marker-flow 1.2s linear infinite;
+  }
+  .edge-label {
+    fill: #8e938f; font: 600 10px var(--mono); letter-spacing: 0.02em;
+    paint-order: stroke; stroke: #0b0d0d; stroke-width: 5px; stroke-linejoin: round;
+  }
+
+  .node {
+    --node-color: var(--ink);
+    position: absolute; z-index: 3; width: 14.5%; min-height: 118px; padding: 14px 15px 13px;
+    border: 1.5px solid #3d4540; border-radius: 5px 8px 4px 7px; color: #c6c8c0; text-align: left;
+    background: rgba(17, 21, 20, 0.96); box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.22); cursor: pointer;
+    opacity: 0.58; transform: rotate(var(--tilt, 0deg));
+    transition: opacity 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  }
+  .node::before {
+    position: absolute; top: -4px; left: 11px; width: 34%; border-top: 2px solid var(--node-color);
+    content: ""; transform: rotate(-1.2deg); opacity: 0.65;
+  }
+  .node:hover, .node:focus-visible, .node.is-selected {
+    z-index: 4; border-color: var(--node-color); outline: none; opacity: 1;
+    transform: rotate(0deg) translateY(-3px); box-shadow: 6px 9px 0 rgba(0, 0, 0, 0.32);
+  }
+  .node.is-active { opacity: 1; border-color: color-mix(in srgb, var(--node-color) 66%, #3d4540); }
+  .node.is-dimmed { opacity: 0.2; }
+  .node__topline { display: flex; gap: 10px; align-items: center; margin-bottom: 9px; }
+  .node__icon {
+    display: grid; flex: 0 0 28px; width: 28px; height: 28px; place-items: center;
+    border: 1px solid currentColor; border-radius: 50% 47% 53% 45%; color: var(--node-color);
+    font: 800 13px/1 var(--mono); transform: rotate(-3deg);
+  }
+  .node__step { color: var(--node-color); font: 800 9px/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.12em; }
+  .node h2 { margin: 0 0 7px; color: var(--ink); font: 700 clamp(14px, 1.2vw, 18px)/1.15 var(--marker); }
+  .node p { margin: 0; color: #a7aaa3; font-size: clamp(10px, 0.78vw, 12px); line-height: 1.45; }
+  .node__tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .node__tag { padding: 3px 6px; border: 1px dashed #454c47; color: #8f948f; font: 600 8px/1 var(--mono); text-transform: uppercase; }
+
+  .node--src   { --node-color: var(--mint);   --tilt: -0.5deg;  left: 2%;    top: 9%;  }
+  .node--hub   { --node-color: var(--mint);   --tilt: 0.3deg;   left: 18.5%; top: 8%;  }
+  .node--evald { --node-color: var(--cyan);   --tilt: 0.45deg;  left: 35%;   top: 9%;  }
+  .node--evalb { --node-color: var(--cyan);   --tilt: -0.35deg; left: 51.5%; top: 8%;  }
+  .node--dist  { --node-color: var(--gold);   --tilt: 0.4deg;   left: 68%;   top: 9%;  }
+  .node--host  { --node-color: var(--gold);   --tilt: -0.3deg;  left: 84%;   top: 8%;  width: 14%; }
+  .node--std   { --node-color: var(--violet); --tilt: 0.5deg;   left: 10%;   top: 41%; }
+  .node--smk   { --node-color: var(--violet); --tilt: -0.4deg;  left: 30%;   top: 42%; }
+  .node--maps  { --node-color: var(--cyan);   --tilt: -0.45deg; left: 48%;   top: 41.5%; }
+  .node--tpl   { --node-color: var(--violet); --tilt: 0.35deg;  left: 68%;   top: 41%; }
+  .node--back  { --node-color: var(--coral);  --tilt: -0.4deg;  left: 10%;   top: 71%; width: 17%; }
+  .node--cyc   { --node-color: var(--mint);   --tilt: 0.4deg;   left: 43%;   top: 70%; width: 19%; min-height: 132px; }
+  .node--dec   { --node-color: var(--coral);  --tilt: -0.35deg; left: 76%;   top: 71%; width: 16%; }
+
+  .scenario-note {
+    position: absolute; z-index: 3; right: 2%; bottom: 3.5%; width: 19%; padding: 10px 12px;
+    border-left: 3px solid var(--mint); color: #aeb1aa; background: rgba(11, 13, 13, 0.82);
+    font: 600 clamp(9px, 0.78vw, 11px)/1.45 var(--mono); pointer-events: none;
+  }
+  .scenario-note strong { display: block; margin-bottom: 4px; color: var(--mint); }
+
+  .diagram-footer {
+    display: flex; gap: 20px; align-items: center; justify-content: space-between;
+    max-width: 1600px; margin: 14px auto 0; padding-top: 12px; border-top: 1px dashed #2f3531;
+  }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px 18px; color: #8f948e; font: 600 9px/1 var(--mono); text-transform: uppercase; }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .legend i { width: 20px; border-top: 2px solid var(--swatch); transform: rotate(-2deg); }
+  .footer-note { margin: 0; color: #676d68; font: 600 9px/1.5 var(--mono); text-align: right; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .detail-backdrop {
+    position: fixed; z-index: 20; inset: 0; background: rgba(2, 4, 3, 0.46); backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; transition: opacity 180ms ease, visibility 180ms ease;
+  }
+  .detail-backdrop.is-open { opacity: 1; visibility: visible; }
+  .detail-backdrop:not(.is-open), .detail-panel:not(.is-open) { pointer-events: none; }
+
+  .detail-panel {
+    --detail-color: var(--mint);
+    --panel-width: min(800px, 50vw);
+    --panel-max-height: 80vh;
+    position: fixed; z-index: 21; top: 50%; right: clamp(12px, 2vw, 28px);
+    width: var(--panel-width); max-height: var(--panel-max-height);
+    overflow: auto; overscroll-behavior: contain;
+    border: 1.5px solid #505851; border-radius: 6px 9px 5px 8px; color: var(--ink);
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      rgba(13, 16, 15, 0.985);
+    background-size: 100% 28px;
+    box-shadow: -18px 24px 70px rgba(0, 0, 0, 0.6), 5px 6px 0 rgba(0, 0, 0, 0.34);
+    opacity: 0; visibility: hidden;
+    transform: translate(28px, -50%) scale(var(--panel-scale)) rotate(0.25deg);
+    transform-origin: right center;
+    transition: opacity 190ms ease, transform 190ms ease, visibility 190ms ease;
+    scrollbar-width: thin; scrollbar-color: #454d47 transparent;
+    font-size: 14px;
+  }
+  .detail-panel::before {
+    position: absolute; z-index: 2; top: -1px; left: 28px; width: 116px;
+    border-top: 3px solid var(--detail-color); content: ""; transform: rotate(-1deg);
+  }
+  .detail-panel.is-open { opacity: 1; visibility: visible; transform: translate(0, -50%) scale(var(--panel-scale)) rotate(0deg); }
+  .detail-panel__header {
+    position: sticky; z-index: 3; top: 0; display: flex; gap: 20px; align-items: flex-start;
+    justify-content: space-between; padding: 24px 26px 18px; border-bottom: 1px dashed #414842;
+    background: rgba(13, 16, 15, 0.96); backdrop-filter: blur(8px);
+  }
+  .detail-panel__kicker {
+    margin: 0 0 7px; color: var(--detail-color); font: 800 14px/1.2 var(--mono);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .detail-panel h2 { margin: 0; font: 700 clamp(23px, 2vw, 32px)/1.05 var(--marker); }
+  .close-x {
+    display: grid; flex: 0 0 36px; width: 36px; height: 36px; padding: 0; place-items: center;
+    border: 1px solid #4a514c; border-radius: 50%; color: #c7cac2; background: transparent; cursor: pointer;
+    font: 500 24px/1 var(--ui); transition: color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+  .close-x:hover, .close-x:focus-visible { color: var(--coral); border-color: var(--coral); outline: none; transform: rotate(5deg); }
+  .detail-panel__body { padding: 22px 26px 26px; }
+  .detail-summary { margin: 0; color: #c6c8c1; font-size: 14px; line-height: 1.62; }
+  .detail-section { margin-top: 24px; padding-top: 18px; border-top: 1px dashed #353c37; }
+  .detail-section h3 { margin: 0 0 13px; color: var(--ink); font: 700 18px/1.2 var(--marker); }
+  .detail-steps { display: grid; gap: 11px; margin: 0; padding: 0; list-style: none; counter-reset: detail-step; }
+  .detail-steps li {
+    position: relative; min-height: 28px; padding-left: 38px; color: #adb0a9;
+    font-size: 14px; line-height: 1.55; counter-increment: detail-step;
+  }
+  .detail-steps li::before {
+    position: absolute; top: 0; left: 0; display: grid; width: 24px; height: 24px; place-items: center;
+    border: 1px solid var(--detail-color); border-radius: 50% 44% 52% 46%; color: var(--detail-color);
+    content: counter(detail-step); font: 800 14px/1 var(--mono); transform: rotate(-3deg);
+  }
+  .detail-contract { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .detail-contract__item { min-width: 0; padding: 12px 13px; border-left: 2px solid var(--detail-color); background: rgba(255, 255, 255, 0.018); }
+  .detail-contract__item span { color: #9fa39c; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+  .detail-task-heading { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .detail-task-heading h3 { margin: 0; }
+  .detail-task-heading span { color: #929791; font: 700 12px/1.3 var(--mono); text-align: right; text-transform: uppercase; }
+  .epic-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .epic-chip {
+    min-height: 30px; padding: 6px 11px; border: 1px solid #343a37; border-radius: 999px;
+    color: #656b66; background: #0a0c0b; cursor: pointer; font: 700 14px/1.15 var(--mono);
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .epic-chip:hover, .epic-chip:focus-visible { border-color: var(--gold); color: var(--ink); outline: none; }
+  .epic-chip[aria-pressed="true"] { border-color: var(--gold); color: #17140a; background: var(--gold); }
+  .detail-tasks { display: grid; gap: 9px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .detail-task {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start;
+    padding: 10px 0; border-bottom: 1px solid #282e2a;
+  }
+  .detail-task:last-child { border-bottom: 0; }
+  .detail-task__priority {
+    min-width: 34px; padding: 4px 5px; border: 1px solid currentColor; border-radius: 3px 5px 3px 4px;
+    color: var(--gold); font: 800 14px/1 var(--mono); text-align: center; transform: rotate(-1deg);
+  }
+  .detail-task__priority[data-priority="P0"] { color: var(--coral); }
+  .detail-task__priority[data-priority="P2"] { color: var(--cyan); }
+  .detail-task__priority[data-priority="P3"] { color: var(--violet); }
+  .detail-task__copy strong { display: block; color: #c4c7bf; font-size: 14px; line-height: 1.42; }
+  .detail-task__copy small { display: block; margin-top: 4px; color: #8d938d; font: 600 14px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .detail-empty {
+    margin: 12px 0 0; padding: 16px; border: 1px dashed #3c433e; color: #929791;
+    font-size: 14px; line-height: 1.5; text-align: center;
+  }
+
+  .tasks-dialog {
+    position: fixed; z-index: 21; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(920px, 92vw); max-height: 80vh; overflow: auto; overscroll-behavior: contain;
+    border: 1.5px solid var(--gold); border-radius: 6px 9px 5px 8px;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      rgba(13, 16, 15, 0.985);
+    background-size: 100% 28px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 5px 6px 0 rgba(0, 0, 0, 0.34);
+    padding: 22px 26px; opacity: 0; visibility: hidden;
+    transition: opacity 190ms ease, visibility 190ms ease;
+    scrollbar-width: thin; scrollbar-color: #454d47 transparent;
+  }
+  .tasks-dialog.is-open { opacity: 1; visibility: visible; }
+  .tasks-dialog:not(.is-open) { pointer-events: none; }
+  .tasks-dialog__header { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+  .tasks-dialog h2 { margin: 0; font: 700 clamp(22px, 2vw, 30px)/1.05 var(--marker); }
+  .tasks-dialog__scope { margin: 4px 0 0; color: #929791; font: 700 11px/1.4 var(--mono); text-transform: uppercase; }
+  .all-tasks-table { width: 100%; margin-top: 14px; table-layout: fixed; border-collapse: collapse; font-size: 14px; }
+  .all-tasks-table th {
+    padding: 10px 8px; border-bottom: 1px solid #4a514c; color: var(--gold);
+    font: 800 14px/1.2 var(--mono); text-align: left; text-transform: uppercase;
+  }
+  .all-tasks-table th:first-child { width: 62%; }
+  .all-tasks-table th:last-child { width: 38%; }
+  .all-tasks-table td { min-width: 0; padding: 12px 8px; border-bottom: 1px solid #282e2a; vertical-align: top; }
+  .all-tasks-table__task strong { display: block; color: #c4c7bf; font-size: 14px; line-height: 1.42; overflow-wrap: anywhere; }
+  .all-tasks-table__task small { display: block; margin-top: 5px; color: #8d8d8d; font: 600 14px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .task-blocks__trigger {
+    display: block; width: 100%; min-width: 0; padding: 0; overflow: hidden; border: 0;
+    color: #adb0a9; background: transparent; cursor: help; font-size: 14px; line-height: 1.45;
+    text-align: left; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .task-blocks__trigger:focus-visible { color: var(--ink); outline: 1px dashed var(--cyan); outline-offset: 3px; }
+
+  .block-tooltip {
+    position: fixed; z-index: 40; width: max-content; max-width: min(340px, calc(100vw - 24px));
+    padding: 10px 12px; border: 1px solid var(--cyan); border-radius: 5px 7px 4px 6px;
+    color: #d2d5cd; background: rgba(8, 12, 11, 0.99); box-shadow: 8px 10px 26px rgba(0, 0, 0, 0.52);
+    opacity: 0; visibility: hidden; pointer-events: none; font-size: 14px; line-height: 1.5;
+    transform: translateY(4px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+  }
+  .block-tooltip.is-visible { opacity: 1; visibility: visible; transform: translateY(0); }
+  .block-tooltip span { display: block; }
+
+  @keyframes marker-flow { to { stroke-dashoffset: -36; } }
+  @keyframes draw-in {
+    from { opacity: 0; transform: translateY(8px) rotate(var(--tilt, 0deg)); }
+    to { opacity: 0.58; transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  }
+  .board.is-entering .node { animation: draw-in 420ms both; }
+  .board.is-entering .node:nth-of-type(2) { animation-delay: 40ms; }
+  .board.is-entering .node:nth-of-type(3) { animation-delay: 80ms; }
+  .board.is-entering .node:nth-of-type(4) { animation-delay: 120ms; }
+  .board.is-entering .node:nth-of-type(5) { animation-delay: 160ms; }
+  .board.is-entering .node:nth-of-type(6) { animation-delay: 200ms; }
+  .board.is-entering .node:nth-of-type(7) { animation-delay: 240ms; }
+  .board.is-entering .node:nth-of-type(8) { animation-delay: 280ms; }
+  .board.is-entering .node:nth-of-type(9) { animation-delay: 320ms; }
+  .board.is-entering .node:nth-of-type(10) { animation-delay: 360ms; }
+  .board.is-entering .node:nth-of-type(11) { animation-delay: 400ms; }
+  .board.is-entering .node:nth-of-type(12) { animation-delay: 440ms; }
+  .board.is-entering .node:nth-of-type(13) { animation-delay: 480ms; }
+
+  @media (max-width: 760px) {
+    .topbar { grid-template-columns: 1fr; }
+    .status-stamp { display: none; }
+    .board { min-height: 0; }
+    .board .node { position: static; width: auto !important; margin: 10px 12px; opacity: 1; transform: none; }
+    .connections, .layer-label, .scenario-note, .board-shell::before, .board-shell::after { display: none; }
+    .detail-panel {
+      right: 0; left: 0; top: auto; bottom: 0; width: 100vw; max-width: 100vw;
+      max-height: 80svh; border-radius: 14px 14px 0 0; transform: translateY(24px) scale(var(--panel-scale));
+      transform-origin: bottom center;
+    }
+    .detail-panel.is-open { transform: translateY(0) scale(var(--panel-scale)); }
+    .detail-contract { grid-template-columns: 1fr; }
+    .diagram-footer { flex-direction: column; align-items: flex-start; }
+    .footer-note { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">crateon-bundle · toolchain runtime · <a href="crateon-bundle-runtime-map.html" style="color: inherit">RU</a></p>
+      <h1>Crateon Bundle Toolchain Runtime Map</h1>
+      <p class="subtitle">A verified view, not a poster: skill authoring &rarr; validator &rarr; eval loops &rarr; dist &rarr; hosts &rarr; the op-cycle on a target project &rarr; the friction return loop. Nodes are backed by manifests (package.json, build-dist.js) and docs; task chips are a live slice of open docs/tasks units.</p>
+    </div>
+    <div class="status-stamp">verified 2026-07-16<br>contract green<br>validate-runtime-map</div>
+  </header>
+
+  <div class="scenario-bar" role="group" aria-label="Scenarios">
+    <span class="scenario-label">Scenarios:</span>
+    <button class="scenario-button" type="button" data-scenario="all" aria-pressed="true">Whole system</button>
+    <button class="scenario-button" type="button" id="all-tasks-button" aria-haspopup="dialog">All tasks</button>
+    <button class="scenario-button" type="button" data-scenario="publish" aria-pressed="false">publish a skill</button>
+    <button class="scenario-button" type="button" data-scenario="eval" aria-pressed="false">eval run</button>
+    <button class="scenario-button" type="button" data-scenario="campaign" aria-pressed="false">op-watch campaign</button>
+    <button class="scenario-button" type="button" data-scenario="feedback" aria-pressed="false">friction loop</button>
+  </div>
+
+  <div class="board-shell">
+    <div class="board is-entering" id="board">
+      <svg class="connections" id="connections" aria-hidden="true"></svg>
+      <span class="layer-label layer-label--flow">publication flow</span>
+      <span class="layer-label layer-label--platform">platform · norms</span>
+      <span class="layer-label layer-label--target">target project · loop</span>
+
+      <button class="node node--src" data-node="skills-source">
+        <span class="node__topline"><span class="node__icon">S</span><span class="node__step">01 · Source</span></span>
+        <h2>skills/ (source)</h2>
+        <p>26 directories: 20 published + 6 repo-only. SKILL.md + references + scripts.</p>
+        <span class="node__tags"><span class="node__tag">source of truth</span></span>
+      </button>
+      <button class="node node--hub" data-node="validator-hub">
+        <span class="node__topline"><span class="node__icon">&#10003;</span><span class="node__step">02 · Gate</span></span>
+        <h2>Validator hub</h2>
+        <p>validate-skills.js: budgets, triggers, canonical completion block, dead-refs.</p>
+        <span class="node__tags"><span class="node__tag">0/0 mandatory</span></span>
+      </button>
+      <button class="node node--evald" data-node="eval-deterministic">
+        <span class="node__topline"><span class="node__icon">&tau;</span><span class="node__step">03 · Eval</span></span>
+        <h2>Eval: deterministic</h2>
+        <p>trigger-rank.mjs — TF-IDF routing, collision matrix, trigger-cases.</p>
+        <span class="node__tags"><span class="node__tag">no models</span></span>
+      </button>
+      <button class="node node--evalb" data-node="eval-behavioral">
+        <span class="node__topline"><span class="node__icon">&beta;</span><span class="node__step">04 · Eval</span></span>
+        <h2>Eval: behavioral</h2>
+        <p>run-behavioral-evals.mjs — trace-grading of observed tool calls, cross-model.</p>
+        <span class="node__tags"><span class="node__tag">fs-diff</span><span class="node__tag">leakage-control</span></span>
+      </button>
+      <button class="node node--dist" data-node="dist-build">
+        <span class="node__topline"><span class="node__icon">&Delta;</span><span class="node__step">05 · Build</span></span>
+        <h2>dist build</h2>
+        <p>build-dist.js: the publicSkills list — the single point of publication.</p>
+        <span class="node__tags"><span class="node__tag">20 published</span></span>
+      </button>
+      <button class="node node--host" data-node="host-install">
+        <span class="node__topline"><span class="node__icon">H</span><span class="node__step">06 · Hosts</span></span>
+        <h2>Host install</h2>
+        <p>~/.claude/skills and ~/.codex/skills, byte-identical to dist.</p>
+        <span class="node__tags"><span class="node__tag">diff -r</span></span>
+      </button>
+
+      <button class="node node--std" data-node="skill-standard">
+        <span class="node__topline"><span class="node__icon">&sect;</span><span class="node__step">Norm</span></span>
+        <h2>SKILL_STANDARD</h2>
+        <p>The normative source: placement, budgets, trigger rules. The validator cites it.</p>
+      </button>
+      <button class="node node--smk" data-node="smokes">
+        <span class="node__topline"><span class="node__icon">&#9889;</span><span class="node__step">Grid</span></span>
+        <h2>Script smokes</h2>
+        <p>Ergonomics, fixtures, fallback, verdict, feedback, runtime-map — the regression grid.</p>
+      </button>
+      <button class="node node--maps" data-node="runtime-maps">
+        <span class="node__topline"><span class="node__icon">M</span><span class="node__step">Artifact</span></span>
+        <h2>Maps (runtime-map-updater)</h2>
+        <p>Interactive HTML maps of the toolchain and the skills — verified artifacts built from docs and tasks.</p>
+      </button>
+      <button class="node node--tpl" data-node="templates">
+        <span class="node__topline"><span class="node__icon">T</span><span class="node__step">Contract</span></span>
+        <h2>Contract templates</h2>
+        <p>templates/AGENTS.md + HANDBOOK: Stack Profile, Epic Closure Gate for target projects.</p>
+      </button>
+
+      <button class="node node--back" data-node="backlog">
+        <span class="node__topline"><span class="node__icon">B</span><span class="node__step">Debt</span></span>
+        <h2>docs/tasks backlog</h2>
+        <p>Five closure epics; open units feed the task chips on nodes.</p>
+        <span class="node__tags"><span class="node__tag">stable IDs</span></span>
+      </button>
+      <button class="node node--cyc" data-node="op-cycle">
+        <span class="node__topline"><span class="node__icon">&#8635;</span><span class="node__step">Runtime</span></span>
+        <h2>op-cycle on a target project</h2>
+        <p>preflight &rarr; goal op-watch (init/mark/accept/verdict) &rarr; epic closure gate.</p>
+        <span class="node__tags"><span class="node__tag">CLEAN-DONE</span></span>
+      </button>
+      <button class="node node--dec" data-node="decision-log">
+        <span class="node__topline"><span class="node__icon">A</span><span class="node__step">Memory</span></span>
+        <h2>Decision log</h2>
+        <p>docs/decisions/decisions.yaml — the closure gate's ADR memory.</p>
+      </button>
+
+      <div class="scenario-note" id="scenario-note" hidden><strong id="scenario-note-title"></strong><span id="scenario-note-text"></span></div>
+    </div>
+  </div>
+
+  <div class="diagram-footer">
+    <div class="legend">
+      <span><i style="--swatch: var(--mint)"></i>main flow</span>
+      <span><i style="--swatch: var(--cyan)"></i>eval · maps</span>
+      <span><i style="--swatch: var(--gold)"></i>delivery</span>
+      <span><i style="--swatch: var(--violet)"></i>platform</span>
+      <span><i style="--swatch: var(--coral)"></i>friction loop</span>
+    </div>
+    <p class="footer-note">an edge = a causal flow only · platform blocks get no arrows to every consumer · the return loop runs the perimeter</p>
+  </div>
+</div>
+
+<div class="detail-backdrop" id="backdrop"></div>
+<aside class="detail-panel" id="detail-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+  <div class="detail-panel__header">
+    <div>
+      <p class="detail-panel__kicker" id="panel-kicker"></p>
+      <h2 id="panel-title"></h2>
+    </div>
+    <button class="close-x" id="panel-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="detail-panel__body" id="panel-body"></div>
+</aside>
+
+<div class="tasks-dialog" id="tasks-dialog" role="dialog" aria-modal="true" aria-labelledby="tasks-title">
+  <div class="tasks-dialog__header">
+    <div>
+      <h2 id="tasks-title">All tasks</h2>
+      <p class="tasks-dialog__scope">docs/tasks backlog slice · verified 2026-07-16</p>
+    </div>
+    <button class="close-x" id="tasks-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="epic-filters" id="epic-filters" role="group" aria-label="Filter by epic"></div>
+  <table class="all-tasks-table">
+    <thead><tr><th>Epic · task</th><th>Blocks</th></tr></thead>
+    <tbody id="all-tasks-body"></tbody>
+  </table>
+</div>
+<div class="block-tooltip" id="block-tooltip" role="tooltip"></div>
+
+<script>
+  "use strict";
+
+  const LAYERS = {
+    "skills-source": "01 · publication flow", "validator-hub": "02 · publication flow",
+    "eval-deterministic": "03 · eval", "eval-behavioral": "04 · eval",
+    "dist-build": "05 · delivery", "host-install": "06 · delivery",
+    "skill-standard": "platform · norms", "smokes": "platform · norms", "templates": "platform · norms",
+    "runtime-maps": "platform · artifacts",
+    "backlog": "target project · loop", "op-cycle": "target project · loop", "decision-log": "target project · loop",
+  };
+
+  const nodeDetails = {
+    "skills-source": {
+      summary: "The skills/ tree is the single source of truth for skill bodies: 20 published + 6 repo-only, each a SKILL.md with optional references/ and scripts/.",
+      steps: [
+        "An author edits SKILL.md / references / scripts in the source tree, never in dist.",
+        "Every contract rule is stated explicitly — models follow the stated contract, not the implied one (the F-V lesson).",
+        "A change travels down the pipeline only through the validator and the eval gates.",
+      ],
+      boundaries: [
+        "Never edited in dist or on the hosts — only here.",
+        "Protocol sections (Completion Status) are canonical — the SKILL-10 guard checks them byte-level.",
+        "Repo-only skills (hardening, deploy, etc.) are not published.",
+      ],
+      tasks: [],
+    },
+    "validator-hub": {
+      summary: "scripts/validate-skills.js — the mechanical hub for SKILL_STANDARD norms: description budgets, trigger counts, bare-placeholder ban, dead cross-references, the canonical completion block.",
+      steps: [
+        "Runs over source (26) and dist (20) — both must be 0 errors / 0 warnings.",
+        "Every message cites the standard's norm, not the validator's opinion.",
+        "New rules land together with a negative fixture in the smoke.",
+      ],
+      boundaries: [
+        "Does not decide WHAT the norm is — SKILL_STANDARD does.",
+        "Runs no agents — static file parsing only.",
+        "The known-skill count is tree-relative, never hardcoded.",
+      ],
+      tasks: [],
+    },
+    "eval-deterministic": {
+      summary: "trigger-rank.mjs: TF-IDF/cosine routing over descriptions — a collision matrix with a gate (warn 0.5 / error 0.75) and a positive/negative trigger-case corpus for every published skill.",
+      steps: [
+        "Builds the corpus from build-dist.js's publicSkills list — the same source of truth as publication.",
+        "A positive must land in top-k; a negative must not rank #1 for a foreign skill.",
+        "Weak collisions survive only through an allowlist with a recorded rationale.",
+      ],
+      boundaries: [
+        "Measures lexical routing, not behavior — behavior belongs to the neighboring loop.",
+        "Deterministic: no models, no network, reproducible on CI.",
+        "Description A/B runs only with an equal corpus size.",
+      ],
+      tasks: [],
+    },
+    "eval-behavioral": {
+      summary: "run-behavioral-evals.mjs: headless skill runs on seeded fixtures, graded by OBSERVED tool calls (fs-diff, completion token), with an answer-leakage control and a cross-model matrix.",
+      steps: [
+        "The skill is delivered via the workspace CLAUDE.md, the prompt via stdin.",
+        "Read-only scenarios require zero writes; checkpoint — exactly one checkpoint file.",
+        "A planted ANSWER.md must not change the grade — otherwise the test measures leakage.",
+      ],
+      boundaries: [
+        "Grades the trace, not the model's self-report.",
+        "Cross-model runs only from the T: test area, never from the bundle.",
+        "The completion token on checkpoint scenarios under crt is informational.",
+      ],
+      tasks: [],
+    },
+    "dist-build": {
+      summary: "scripts/build-dist.js assembles dist/crateon-bundle from the explicit publicSkills list — publishing a skill is exactly one line in that list plus a green validate:dist.",
+      steps: [
+        "Copies only the listed skills, top-level files, and scripts.",
+        "validate:dist re-runs the secret scan, the validators, and the trigger gate over the built tree.",
+        "The result is the only source for host installation.",
+      ],
+      boundaries: [
+        "Hand-written dist edits are a forbidden bypass (the build overwrites them).",
+        "Does not repackage references — skill trees are copied as-is.",
+        "No network: the build is local and deterministic.",
+      ],
+      tasks: [],
+    },
+    "host-install": {
+      summary: "Installed host copies: ~/.claude/skills and ~/.codex/skills. The contract is byte-identity with the dist tree, verified by diff -r.",
+      steps: [
+        "Sync the whole skill directory: rm -rf + cp -r, no merges.",
+        "diff -r against source confirms all three copies are identical.",
+        "The codex side carries the bundle version stamp.",
+      ],
+      boundaries: [
+        "Host copies are never edited in place — only re-synced from dist.",
+        "Installation does not touch foreign skills in the host directories.",
+        "Secrets in skills are forbidden — the scan runs before the sync.",
+      ],
+      tasks: [],
+    },
+    "skill-standard": {
+      summary: "docs/SKILL_STANDARD.md — the normative source: the placement table, budgets, the read-trigger rule for reference links, trigger phrasing, escape hatches.",
+      steps: [
+        "A new norm is written here first, then encoded by the validator.",
+        "Disputes are settled by measurement on the eval loops, not by taste.",
+        "A norm change pulls a fixture into the validator smoke.",
+      ],
+      boundaries: [
+        "Carries no project facts — authoring norms only.",
+        "Does not duplicate skill bodies — it is cited, not copied.",
+        "Changes less often than the validator: the norm is more stable than the implementation.",
+      ],
+      tasks: [],
+    },
+    "smokes": {
+      summary: "scripts/eval/*-smoke.mjs — the regression grid over skill scripts: ergonomics (no Node tracebacks ever), validator fixtures, stack fallback, verdict, validate-feedback, ingest.",
+      steps: [
+        "Each script is fed deliberately broken input.",
+        "Asserted: a one-line error + non-zero exit, not a dump.",
+        "A new skill script gets a smoke case in the same commit.",
+      ],
+      boundaries: [
+        "The smoke does not check skill semantics — only script ergonomics.",
+        "A documented fallback without a test is false resilience (the fallbacks table).",
+        "Cases run on temp directories; the repo is untouched.",
+      ],
+      tasks: [],
+    },
+    "runtime-maps": {
+      summary: "runtime-map-updater (the 20th published skill) maintains the interactive HTML maps — this toolchain one and the all-skills one — as verified artifacts: nodes from docs/manifests, task chips as a live slice of open units, the interaction contract as validate-runtime-map.mjs regexes.",
+      steps: [
+        "Sources resolve from the declared layout; code/manifests outrank docs — the catalog doc is fixed in the same change.",
+        "The task slice is recomputed on every HTML refresh; closed tokens are banned from nodeDetails.",
+        "The validator checks parities (catalog ↔ data-service, node ↔ details) and the panel contract; the look follows references/design-language.md.",
+      ],
+      boundaries: [
+        "Writes only the map (+ the catalog doc and e2e spec when required) — application runtime code is never touched.",
+        "A green validator is not done: the visual render is checked separately.",
+        "Ported from cognitron and generalized; port convergence proven on the original artifact.",
+      ],
+      tasks: [],
+    },
+    "templates": {
+      summary: "templates/AGENTS.md and templates/docs/HANDBOOK.md — the target-project contract: the Stack Profile (without it the stack gate is silently off) and the ordered Epic Closure Gate.",
+      steps: [
+        "The project fills in the Stack Profile before its first campaign.",
+        "Closure gate: drift-check, docup --apply, drift-check again, decision-memory last.",
+        "Background cadence: debt-scan + drift-check every ~10 stories.",
+      ],
+      boundaries: [
+        "A template is not bundle documentation — it is scaffolding for another repo.",
+        "The gate order is normative: drift finds what docup fixes.",
+        "Story-level work needs no skills — only a proof command and mechanical gates.",
+      ],
+      tasks: [],
+    },
+    "backlog": {
+      summary: "docs/tasks/*.md — five epics (authoring, eval-adoption, e2e-hardening, wave-2, op-watch-hardening); unit statuses in headings are canonical, and the consistency sweep is part of the closure gate.",
+      steps: [
+        "Friction from e2e runs is filed as units with stable IDs.",
+        "A unit closes only with a mechanical proof in its DONE line.",
+        "Deferrals are recorded as decisions in the ADR log, never by silence.",
+      ],
+      boundaries: [
+        "Not an intent tracker: a unit without an acceptance criterion is not filed.",
+        "A closed unit never reaches the map's chips — only open debt lives here.",
+        "The heading status outranks the prose in the body.",
+      ],
+      tasks: ["P3 · skill-eval-adoption.md · EVAL-7 — plugin-surface parity: deferred until the first consumer of the plugin format"],
+    },
+    "op-cycle": {
+      summary: "The runtime loop on a target project: op-preflight gates the entry, goal pumps op-watch one bounded step at a time (init/mark/accept/verdict — scripts write the state, not prose), the epic closure gate finishes.",
+      steps: [
+        "derive freezes the charter facts atomically via init.mjs.",
+        "accept.mjs catches false-done against real artifacts; verdict.mjs computes the verdict over state.",
+        "CLEAN-DONE is unreachable until the closure gate units resolve.",
+      ],
+      boundaries: [
+        "op-watch is a thin dispatcher: analysis belongs to the delegates (debug/audit/planner).",
+        "Critical/structural units are never auto-fixed — they go to a human.",
+        "Skills never run git add/commit — that is baby-commit/dry-commit or the human.",
+      ],
+      tasks: [],
+    },
+    "decision-log": {
+      summary: "docs/decisions/decisions.yaml — ADR memory: WHY a choice was made and what was rejected. Written by decision-memory as the last gate step, once the docs have settled.",
+      steps: [
+        "Candidates are extracted from epics and history; rationale from story notes before commit messages.",
+        "Idempotent append: identity by category and substance, not by ADR number.",
+        "Table export on demand; the YAML is primary.",
+      ],
+      boundaries: [
+        "Not a changelog: WHAT-per-release lives separately and never mixes in.",
+        "One decision — one ADR, not one per commit.",
+        "Writes only with an explicit --apply.",
+      ],
+      tasks: [],
+    },
+  };
+
+  const EDGES = [
+    { from: "skills-source", to: "validator-hub", label: "corpus 0/0", color: "var(--mint)", scenarios: ["publish"] },
+    { from: "validator-hub", to: "eval-deterministic", label: "trigger gate", color: "var(--cyan)", scenarios: ["publish", "eval"] },
+    { from: "eval-deterministic", to: "eval-behavioral", label: "trace-grade", color: "var(--cyan)", scenarios: ["eval"] },
+    { from: "eval-behavioral", to: "dist-build", label: "validate:dist", color: "var(--gold)", scenarios: ["publish"] },
+    { from: "dist-build", to: "host-install", label: "sync", color: "var(--gold)", scenarios: ["publish"] },
+    { from: "host-install", to: "op-cycle", label: "skills at work", color: "var(--mint)", scenarios: ["campaign"] },
+    { from: "templates", to: "op-cycle", label: "AGENTS contract", color: "var(--violet)", scenarios: ["campaign"] },
+    { from: "op-cycle", to: "decision-log", label: "ADR at closure", color: "var(--violet)", scenarios: ["campaign"] },
+    { from: "backlog", to: "runtime-maps", label: "live task slice", color: "var(--cyan)", scenarios: ["feedback"] },
+    { from: "op-cycle", to: "backlog", label: "friction", color: "var(--coral)", scenarios: ["feedback"], kind: "return" },
+    { from: "backlog", to: "skills-source", label: "fixes", color: "var(--coral)", scenarios: ["feedback"], kind: "return" },
+  ];
+
+  const SCENARIO_NOTES = {
+    all: ["Whole system", "the full contour: skill publication, two eval loops, delivery to hosts, the op-cycle on a target project, and the friction return loop."],
+    publish: ["Publish a skill", "source → validator → trigger gate → validate:dist → byte-identical sync to both hosts; publication = one publicSkills line."],
+    eval: ["Eval run", "deterministic routing (no models) and behavioral trace-grading (observed tool calls) — two independent trust loops."],
+    campaign: ["op-watch campaign", "host skills work on a target project under a goal loop; scripts write the state; the finale is the epic closure gate with an ADR record."],
+    feedback: ["Friction loop", "e2e runs return friction as backlog units; closed units become fixes in the skills source — the circle closes; the maps re-slice open tasks."],
+  };
+
+  const board = document.getElementById("board");
+  const svg = document.getElementById("connections");
+  const panel = document.getElementById("detail-panel");
+  const backdrop = document.getElementById("backdrop");
+  const tasksDialog = document.getElementById("tasks-dialog");
+  const tooltip = document.getElementById("block-tooltip");
+  let lastFocused = null;
+
+  // Zoom-out compensation from the load-time DPR baseline; never neutralize zoom-in.
+  const initialDevicePixelRatio = window.devicePixelRatio || 1;
+  function applyZoomCompensation() {
+    const currentDevicePixelRatio = window.devicePixelRatio || 1;
+    const ratio = initialDevicePixelRatio / currentDevicePixelRatio;
+    document.documentElement.style.setProperty("--panel-scale", String(Math.max(1, ratio)));
+  }
+  window.addEventListener("resize", applyZoomCompensation);
+  applyZoomCompensation();
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function edgeGeometry(e, shellRect) {
+    const a = board.querySelector(`[data-node="${e.from}"]`).getBoundingClientRect();
+    const b = board.querySelector(`[data-node="${e.to}"]`).getBoundingClientRect();
+    const x1 = a.left - shellRect.left + a.width / 2, y1 = a.top - shellRect.top + a.height / 2;
+    const x2 = b.left - shellRect.left + b.width / 2, y2 = b.top - shellRect.top + b.height / 2;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2 + (e.kind === "return" ? 46 : -22);
+    return { d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`, lx: mx, ly: (y1 + y2) / 2 + (e.kind === "return" ? 30 : -16) };
+  }
+  function drawEdges(activeScenario) {
+    const shellRect = board.getBoundingClientRect();
+    svg.setAttribute("viewBox", `0 0 ${shellRect.width} ${shellRect.height}`);
+    svg.innerHTML = "";
+    for (const e of EDGES) {
+      const g = edgeGeometry(e, shellRect);
+      const isActive = activeScenario === "all" || (activeScenario && e.scenarios.includes(activeScenario));
+      const shadow = document.createElementNS(SVGNS, "path");
+      shadow.setAttribute("d", g.d);
+      shadow.setAttribute("class", "edge edge-shadow");
+      svg.appendChild(shadow);
+      const p = document.createElementNS(SVGNS, "path");
+      p.setAttribute("d", g.d);
+      p.setAttribute("class", `edge${isActive ? " is-active" : ""}`);
+      p.style.setProperty("--edge-color", e.color);
+      svg.appendChild(p);
+      const t = document.createElementNS(SVGNS, "text");
+      t.setAttribute("x", g.lx); t.setAttribute("y", g.ly);
+      t.setAttribute("class", "edge-label"); t.setAttribute("text-anchor", "middle");
+      t.textContent = e.label;
+      if (isActive) t.style.fill = "var(--ink)";
+      svg.appendChild(t);
+    }
+    board.querySelectorAll(".node").forEach((n) => {
+      const touched = activeScenario === "all" ||
+        EDGES.some((e) => e.scenarios.includes(activeScenario) && (e.from === n.dataset.node || e.to === n.dataset.node));
+      n.classList.toggle("is-active", Boolean(touched));
+      n.classList.toggle("is-dimmed", Boolean(!touched));
+    });
+    const note = document.getElementById("scenario-note");
+    const [title, text] = SCENARIO_NOTES[activeScenario] || SCENARIO_NOTES.all;
+    document.getElementById("scenario-note-title").textContent = title;
+    document.getElementById("scenario-note-text").textContent = text;
+    note.hidden = false;
+  }
+  window.addEventListener("resize", () => drawEdges(currentScenario));
+
+  // "Whole system" is the resting state: selecting a route narrows the view,
+  // re-clicking it returns to the fully-lit board.
+  let currentScenario = "all";
+  document.querySelectorAll(".scenario-button[data-scenario]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentScenario = currentScenario === btn.dataset.scenario ? "all" : btn.dataset.scenario;
+      document.querySelectorAll(".scenario-button[data-scenario]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.scenario === currentScenario)));
+      drawEdges(currentScenario);
+    });
+  });
+
+  // ---- shared epic-selection state (node panels + the all-tasks dialog read the SAME set)
+  const taskRefRe = /^(P\d)\s*·\s*([A-Za-z0-9_.-]+\.md)\s*·\s*([A-Za-z0-9 -]+?)\s*—\s*(.*)$/;
+  const allTasks = [];
+  for (const [nodeId, d] of Object.entries(nodeDetails)) {
+    for (const t of d.tasks) {
+      const m = taskRefRe.exec(t);
+      if (!m) continue;
+      const key = `${m[2]} · ${m[3]}`;
+      let entry = allTasks.find((x) => x.key === key);
+      if (!entry) { entry = { key, priority: m[1], epic: m[2], summary: m[4], nodes: [] }; allTasks.push(entry); }
+      entry.nodes.push(nodeId);
+    }
+  }
+  const epicNames = [...new Set(allTasks.map((t) => t.epic))];
+  const selectedEpics = new Set(epicNames);
+
+  function chipFor(name) {
+    const chip = document.createElement("button");
+    chip.className = "epic-chip";
+    chip.textContent = name;
+    chip.setAttribute("aria-pressed", String(selectedEpics.has(name)));
+    chip.addEventListener("click", () => {
+      selectedEpics.has(name) ? selectedEpics.delete(name) : selectedEpics.add(name);
+      renderAllViews();
+      if (openNodeId) fillPanel(openNodeId);
+    });
+    return chip;
+  }
+  function renderEpicChips(container) {
+    container.innerHTML = "";
+    if (!epicNames.length) {
+      const s = document.createElement("span");
+      s.className = "detail-empty"; s.textContent = "No open tasks — a map with no verified debt.";
+      container.appendChild(s); return;
+    }
+    for (const name of epicNames) container.appendChild(chipFor(name));
+  }
+
+  function renderTasksTable() {
+    const body = document.getElementById("all-tasks-body");
+    body.innerHTML = "";
+    for (const t of allTasks) {
+      if (!selectedEpics.has(t.epic)) continue;
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      td1.className = "all-tasks-table__task";
+      td1.innerHTML = `<strong>${t.summary}</strong><small>${t.priority} · ${t.key}</small>`;
+      const td2 = document.createElement("td");
+      const trigger = document.createElement("button");
+      trigger.className = "task-blocks__trigger";
+      trigger.type = "button";
+      trigger.textContent = t.nodes.join(", ");
+      const show = () => {
+        tooltip.innerHTML = t.nodes.map((b) => `<span>${b}</span>`).join("");
+        tooltip.classList.add("is-visible");
+        const r = trigger.getBoundingClientRect();
+        tooltip.style.left = `${Math.min(r.left, window.innerWidth - 360)}px`;
+        tooltip.style.top = `${r.bottom + 6}px`;
+      };
+      const hide = () => tooltip.classList.remove("is-visible");
+      trigger.addEventListener("mouseenter", show);
+      trigger.addEventListener("mouseleave", hide);
+      trigger.addEventListener("focus", show);
+      trigger.addEventListener("blur", hide);
+      td2.appendChild(trigger);
+      tr.append(td1, td2);
+      body.appendChild(tr);
+    }
+  }
+
+  let openNodeId = null;
+  function fillPanel(nodeId) {
+    const d = nodeDetails[nodeId];
+    const nodeEl = board.querySelector(`[data-node="${nodeId}"]`);
+    const accent = getComputedStyle(nodeEl).getPropertyValue("--node-color").trim();
+    panel.style.setProperty("--detail-color", accent);
+    document.getElementById("panel-kicker").textContent = LAYERS[nodeId] || "";
+    document.getElementById("panel-title").textContent = nodeEl.querySelector("h2").textContent;
+    const visible = d.tasks.filter((t) => { const m = taskRefRe.exec(t); return m && selectedEpics.has(m[2]); });
+    const taskItems = visible.map((t) => {
+      const m = taskRefRe.exec(t);
+      return `<li class="detail-task">
+        <span class="detail-task__priority" data-priority="${m[1]}">${m[1]}</span>
+        <span class="detail-task__copy"><strong>${m[4]}</strong><small>${m[2]} · ${m[3]}</small></span>
+      </li>`;
+    }).join("");
+    document.getElementById("panel-body").innerHTML = `
+      <p class="detail-summary">${d.summary}</p>
+      <div class="detail-section"><h3>Execution steps</h3>
+        <ol class="detail-steps">${d.steps.map((s) => `<li>${s}</li>`).join("")}</ol></div>
+      <div class="detail-section"><h3>Boundaries</h3>
+        <div class="detail-contract">${d.boundaries.map((s) => `<div class="detail-contract__item"><span>${s}</span></div>`).join("")}</div></div>
+      <div class="detail-section">
+        <div class="detail-task-heading"><h3>Open tasks</h3><span>docs/tasks slice</span></div>
+        <div class="epic-filters" data-panel-chips></div>
+        ${visible.length ? `<ul class="detail-tasks">${taskItems}</ul>` : '<div class="detail-empty">No verified open debt.</div>'}`;
+    renderEpicChips(document.querySelector("[data-panel-chips]"));
+  }
+  function openPanel(nodeId, opener) {
+    lastFocused = opener;
+    openNodeId = nodeId;
+    board.querySelectorAll(".node").forEach((n) => n.classList.toggle("is-selected", n.dataset.node === nodeId));
+    fillPanel(nodeId);
+    panel.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.getElementById("panel-close").focus();
+  }
+  function closeOverlays() {
+    panel.classList.remove("is-open");
+    tasksDialog.classList.remove("is-open");
+    backdrop.classList.remove("is-open");
+    tooltip.classList.remove("is-visible");
+    board.querySelectorAll(".node").forEach((n) => n.classList.remove("is-selected"));
+    openNodeId = null;
+    if (lastFocused) { lastFocused.focus(); lastFocused = null; }
+  }
+  board.querySelectorAll(".node").forEach((n) => n.addEventListener("click", () => openPanel(n.dataset.node, n)));
+  document.getElementById("panel-close").addEventListener("click", closeOverlays);
+  document.getElementById("tasks-close").addEventListener("click", closeOverlays);
+  backdrop.addEventListener("click", closeOverlays);
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeOverlays(); });
+
+  document.getElementById("all-tasks-button").addEventListener("click", (ev) => {
+    lastFocused = ev.currentTarget;
+    renderAllViews();
+    tasksDialog.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.getElementById("tasks-close").focus();
+  });
+
+  function renderAllViews() {
+    renderEpicChips(document.getElementById("epic-filters"));
+    renderTasksTable();
+  }
+
+  renderAllViews();
+  drawEdges(currentScenario);
+  setTimeout(() => board.classList.remove("is-entering"), 900);
+</script>
+</body>
+</html>

@@ -97,6 +97,10 @@ writes only inside its dated output directory.
 | **dry-commit** | Group uncommitted changes by theme into `COMMIT_PLAN.md` with commit messages | checkpoint |
 | **changelog** | Generate a keepachangelog section from git history; preview by default | checkpoint |
 
+![Crateon Bundle skills map — all 20 published skills across four lifecycle lanes](docs/presentations/crateon-bundle-skills-map.png)
+
+The map above is a static render of the interactive skills map — a verified artifact maintained by `runtime-map-updater` (every block is checked against this table, task chips are a live slice of open backlog units). Interactive versions: [skills map (EN)](docs/presentations/crateon-bundle-skills-map.en.html) · [RU](docs/presentations/crateon-bundle-skills-map.html), [toolchain map (EN)](docs/presentations/crateon-bundle-runtime-map.en.html) · [RU](docs/presentations/crateon-bundle-runtime-map.html).
+
 ### Recommended Packs
 
 Use these packs when installing only the daily surface:

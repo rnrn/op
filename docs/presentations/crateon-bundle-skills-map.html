@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crateon Bundle — карта скилов</title>
+<style>
+  :root {
+    --ink: #f5f1df;
+    --muted: #9d9b91;
+    --board: #0b0d0d;
+    --board-soft: #111514;
+    --line: #343a37;
+    --mint: #57f0b2;
+    --gold: #ffd166;
+    --coral: #ff6f61;
+    --cyan: #65d6ff;
+    --violet: #c4a7ff;
+    --shadow: rgba(0, 0, 0, 0.42);
+    --ui: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    --marker: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    --panel-scale: 1;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { min-width: 320px; background: var(--board); scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      var(--board);
+    background-size: 28px 28px;
+  }
+  button { font: inherit; }
+  .page { min-height: 100vh; padding: 24px clamp(16px, 3vw, 44px) 36px; overflow: hidden; }
+
+  .topbar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end;
+    max-width: 1600px; margin: 0 auto 22px;
+  }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 9px; color: var(--mint);
+    font: 700 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.16em;
+  }
+  .eyebrow::before {
+    width: 28px; height: 2px; content: ""; background: currentColor;
+    box-shadow: 8px 4px 0 -0.5px currentColor; transform: rotate(-2deg);
+  }
+  h1 { max-width: 860px; margin: 0; font: 700 clamp(30px, 4vw, 54px)/0.98 var(--marker); text-wrap: balance; }
+  .subtitle { max-width: 800px; margin: 12px 0 0; color: #c8c6bb; font-size: clamp(13px, 1.2vw, 16px); line-height: 1.55; }
+  .status-stamp {
+    min-width: 174px; padding: 12px 16px 10px; border: 2px solid var(--gold); color: var(--gold);
+    font: 700 11px/1.45 var(--mono); text-align: center; text-transform: uppercase;
+    transform: rotate(1.3deg); box-shadow: 3px 3px 0 rgba(255, 209, 102, 0.18);
+  }
+
+  .scenario-bar {
+    display: flex; gap: 8px; align-items: center; max-width: 1600px; margin: 0 auto 14px;
+    overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 2px 2px 7px;
+  }
+  .scenario-label {
+    flex: 0 0 auto; margin-right: 8px; color: var(--muted);
+    font: 700 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .scenario-button {
+    position: relative; flex: 0 0 auto; min-height: 34px; padding: 7px 13px;
+    border: 1px solid #424844; border-radius: 3px 6px 4px 5px; color: #babdb5;
+    background: rgba(17, 21, 20, 0.9); cursor: pointer;
+    transition: color 160ms ease, border-color 160ms ease, transform 160ms ease, background 160ms ease;
+  }
+  .scenario-button:hover, .scenario-button:focus-visible {
+    color: var(--ink); border-color: var(--mint); outline: none; transform: translateY(-1px) rotate(-0.3deg);
+  }
+  .scenario-button[aria-pressed="true"] { color: #07110d; border-color: var(--mint); background: var(--mint); font-weight: 800; }
+  #all-tasks-button { border-color: var(--gold); color: var(--gold); }
+  #all-tasks-button:hover, #all-tasks-button:focus-visible {
+    color: #17140a; border-color: var(--gold); background: var(--gold); outline: none; transform: translateY(-1px);
+  }
+
+  .board-shell {
+    position: relative; max-width: 1600px; margin: 0 auto; border: 1px solid #303632;
+    background:
+      radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.028), transparent 20%),
+      rgba(9, 12, 11, 0.94);
+    box-shadow: 0 22px 70px var(--shadow), inset 0 0 0 5px rgba(255, 255, 255, 0.008);
+  }
+  .board-shell::before, .board-shell::after {
+    position: absolute; z-index: 5; width: 64px; height: 18px; content: "";
+    background: rgba(220, 207, 165, 0.15); border: 1px solid rgba(255, 255, 255, 0.08); pointer-events: none;
+  }
+  .board-shell::before { top: -7px; left: 7%; transform: rotate(-3deg); }
+  .board-shell::after { right: 8%; bottom: -7px; transform: rotate(2deg); }
+  .board { position: relative; min-height: clamp(960px, 70vw, 1140px); isolation: isolate; overflow: hidden; }
+
+  .layer-label {
+    position: absolute; z-index: 2; color: #777d78; font: 700 9px/1 var(--mono);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .layer-label::after { display: block; width: 48px; margin-top: 6px; border-bottom: 1px dashed #3b413d; content: ""; }
+  .layer-label--intake { top: 16px; left: 2%; }
+  .layer-label--run { top: 27%; left: 2%; }
+  .layer-label--closure { top: 53%; left: 2%; }
+  .layer-label--delivery { top: 78%; left: 2%; }
+
+  .connections { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .edge {
+    fill: none; stroke: #4a514d; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.28; vector-effect: non-scaling-stroke;
+    transition: opacity 200ms ease, stroke 200ms ease, stroke-width 200ms ease;
+  }
+  .edge-shadow { transform: translate(2px, 1px); opacity: 0.12; }
+  .edge.is-active {
+    stroke: var(--edge-color, var(--mint)); stroke-width: 3.2; opacity: 0.95;
+    stroke-dasharray: 10 8; animation: marker-flow 1.2s linear infinite;
+  }
+  .edge-label {
+    fill: #8e938f; font: 600 10px var(--mono); letter-spacing: 0.02em;
+    paint-order: stroke; stroke: #0b0d0d; stroke-width: 5px; stroke-linejoin: round;
+  }
+
+  .node {
+    --node-color: var(--ink);
+    position: absolute; z-index: 3; width: 16%; min-height: 112px; padding: 13px 14px 12px;
+    border: 1.5px solid #3d4540; border-radius: 5px 8px 4px 7px; color: #c6c8c0; text-align: left;
+    background: rgba(17, 21, 20, 0.96); box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.22); cursor: pointer;
+    opacity: 0.58; transform: rotate(var(--tilt, 0deg));
+    transition: opacity 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  }
+  .node::before {
+    position: absolute; top: -4px; left: 11px; width: 34%; border-top: 2px solid var(--node-color);
+    content: ""; transform: rotate(-1.2deg); opacity: 0.65;
+  }
+  .node:hover, .node:focus-visible, .node.is-selected {
+    z-index: 4; border-color: var(--node-color); outline: none; opacity: 1;
+    transform: rotate(0deg) translateY(-3px); box-shadow: 6px 9px 0 rgba(0, 0, 0, 0.32);
+  }
+  .node.is-active { opacity: 1; border-color: color-mix(in srgb, var(--node-color) 66%, #3d4540); }
+  .node.is-dimmed { opacity: 0.2; }
+  .node__topline { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .node__icon {
+    display: grid; flex: 0 0 26px; width: 26px; height: 26px; place-items: center;
+    border: 1px solid currentColor; border-radius: 50% 47% 53% 45%; color: var(--node-color);
+    font: 800 12px/1 var(--mono); transform: rotate(-3deg);
+  }
+  .node__step { color: var(--node-color); font: 800 9px/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.12em; }
+  .node h2 { margin: 0 0 6px; color: var(--ink); font: 700 clamp(13px, 1.1vw, 17px)/1.15 var(--marker); }
+  .node p { margin: 0; color: #a7aaa3; font-size: clamp(10px, 0.74vw, 12px); line-height: 1.42; }
+
+  /* row 1 — вход · планирование */
+  .node--tour     { --node-color: var(--gold);   --tilt: -0.5deg;  left: 2%;    top: 5%; }
+  .node--pref     { --node-color: var(--gold);   --tilt: 0.35deg;  left: 22%;   top: 4.5%; }
+  .node--finder   { --node-color: var(--gold);   --tilt: -0.3deg;  left: 42%;   top: 5%; }
+  .node--planner  { --node-color: var(--gold);   --tilt: 0.45deg;  left: 62%;   top: 4.5%; }
+  .node--dockit   { --node-color: var(--gold);   --tilt: -0.4deg;  left: 82%;   top: 5%; width: 16%; }
+  /* row 2 — исполнение · discovery */
+  .node--watch    { --node-color: var(--mint);   --tilt: 0.4deg;   left: 2%;    top: 30%; width: 18%; min-height: 126px; }
+  .node--debug    { --node-color: var(--mint);   --tilt: -0.35deg; left: 24%;   top: 30.5%; }
+  .node--audit    { --node-color: var(--mint);   --tilt: 0.3deg;   left: 44%;   top: 30%; }
+  .node--debt     { --node-color: var(--mint);   --tilt: -0.45deg; left: 64%;   top: 30.5%; }
+  .node--map      { --node-color: var(--cyan);   --tilt: 0.5deg;   left: 84%;   top: 30%; width: 14%; }
+  /* row 3 — закрытие эпика */
+  .node--drift    { --node-color: var(--violet); --tilt: -0.4deg;  left: 8%;    top: 56%; width: 17%; }
+  .node--docup    { --node-color: var(--violet); --tilt: 0.35deg;  left: 30%;   top: 56.5%; width: 17%; }
+  .node--decision { --node-color: var(--violet); --tilt: -0.3deg;  left: 52%;   top: 56%; width: 17%; }
+  .node--fharvest { --node-color: var(--violet); --tilt: 0.45deg;  left: 74%;   top: 56.5%; width: 17%; }
+  /* row 4 — коммиты · upstream */
+  .node--dry      { --node-color: var(--coral);  --tilt: 0.4deg;   left: 2%;    top: 81%; width: 14.5%; }
+  .node--baby     { --node-color: var(--coral);  --tilt: -0.35deg; left: 18.5%; top: 81.5%; width: 14.5%; }
+  .node--chlog    { --node-color: var(--coral);  --tilt: 0.3deg;   left: 35%;   top: 81%; width: 14.5%; }
+  .node--uharvest { --node-color: var(--cyan);   --tilt: -0.45deg; left: 51.5%; top: 81.5%; width: 14.5%; }
+  .node--ucherry  { --node-color: var(--cyan);   --tilt: 0.4deg;   left: 68%;   top: 81%; width: 14.5%; }
+  .node--uissues  { --node-color: var(--cyan);   --tilt: -0.3deg;  left: 84.5%; top: 81.5%; width: 13.5%; }
+
+  .scenario-note {
+    position: absolute; z-index: 3; right: 2%; bottom: 2.5%; width: 21%; padding: 10px 12px;
+    border-left: 3px solid var(--mint); color: #aeb1aa; background: rgba(11, 13, 13, 0.82);
+    font: 600 clamp(9px, 0.78vw, 11px)/1.45 var(--mono); pointer-events: none;
+  }
+  .scenario-note strong { display: block; margin-bottom: 4px; color: var(--mint); }
+
+  .diagram-footer {
+    display: flex; gap: 20px; align-items: center; justify-content: space-between;
+    max-width: 1600px; margin: 14px auto 0; padding-top: 12px; border-top: 1px dashed #2f3531;
+  }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px 18px; color: #8f948e; font: 600 9px/1 var(--mono); text-transform: uppercase; }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .legend i { width: 20px; border-top: 2px solid var(--swatch); transform: rotate(-2deg); }
+  .footer-note { margin: 0; color: #676d68; font: 600 9px/1.5 var(--mono); text-align: right; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .detail-backdrop {
+    position: fixed; z-index: 20; inset: 0; background: rgba(2, 4, 3, 0.46); backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; transition: opacity 180ms ease, visibility 180ms ease;
+  }
+  .detail-backdrop.is-open { opacity: 1; visibility: visible; }
+  .detail-backdrop:not(.is-open), .detail-panel:not(.is-open) { pointer-events: none; }
+
+  .detail-panel {
+    --detail-color: var(--mint);
+    --panel-width: min(800px, 50vw);
+    --panel-max-height: 80vh;
+    position: fixed; z-index: 21; top: 50%; right: clamp(12px, 2vw, 28px);
+    width: var(--panel-width); max-height: var(--panel-max-height);
+    overflow: auto; overscroll-behavior: contain;
+    border: 1.5px solid #505851; border-radius: 6px 9px 5px 8px; color: var(--ink);
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      rgba(13, 16, 15, 0.985);
+    background-size: 100% 28px;
+    box-shadow: -18px 24px 70px rgba(0, 0, 0, 0.6), 5px 6px 0 rgba(0, 0, 0, 0.34);
+    opacity: 0; visibility: hidden;
+    transform: translate(28px, -50%) scale(var(--panel-scale)) rotate(0.25deg);
+    transform-origin: right center;
+    transition: opacity 190ms ease, transform 190ms ease, visibility 190ms ease;
+    scrollbar-width: thin; scrollbar-color: #454d47 transparent;
+    font-size: 14px;
+  }
+  .detail-panel::before {
+    position: absolute; z-index: 2; top: -1px; left: 28px; width: 116px;
+    border-top: 3px solid var(--detail-color); content: ""; transform: rotate(-1deg);
+  }
+  .detail-panel.is-open { opacity: 1; visibility: visible; transform: translate(0, -50%) scale(var(--panel-scale)) rotate(0deg); }
+  .detail-panel__header {
+    position: sticky; z-index: 3; top: 0; display: flex; gap: 20px; align-items: flex-start;
+    justify-content: space-between; padding: 24px 26px 18px; border-bottom: 1px dashed #414842;
+    background: rgba(13, 16, 15, 0.96); backdrop-filter: blur(8px);
+  }
+  .detail-panel__kicker {
+    margin: 0 0 7px; color: var(--detail-color); font: 800 14px/1.2 var(--mono);
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .detail-panel h2 { margin: 0; font: 700 clamp(23px, 2vw, 32px)/1.05 var(--marker); }
+  .close-x {
+    display: grid; flex: 0 0 36px; width: 36px; height: 36px; padding: 0; place-items: center;
+    border: 1px solid #4a514c; border-radius: 50%; color: #c7cac2; background: transparent; cursor: pointer;
+    font: 500 24px/1 var(--ui); transition: color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+  .close-x:hover, .close-x:focus-visible { color: var(--coral); border-color: var(--coral); outline: none; transform: rotate(5deg); }
+  .detail-panel__body { padding: 22px 26px 26px; }
+  .detail-summary { margin: 0; color: #c6c8c1; font-size: 14px; line-height: 1.62; }
+  .detail-section { margin-top: 24px; padding-top: 18px; border-top: 1px dashed #353c37; }
+  .detail-section h3 { margin: 0 0 13px; color: var(--ink); font: 700 18px/1.2 var(--marker); }
+  .detail-steps { display: grid; gap: 11px; margin: 0; padding: 0; list-style: none; counter-reset: detail-step; }
+  .detail-steps li {
+    position: relative; min-height: 28px; padding-left: 38px; color: #adb0a9;
+    font-size: 14px; line-height: 1.55; counter-increment: detail-step;
+  }
+  .detail-steps li::before {
+    position: absolute; top: 0; left: 0; display: grid; width: 24px; height: 24px; place-items: center;
+    border: 1px solid var(--detail-color); border-radius: 50% 44% 52% 46%; color: var(--detail-color);
+    content: counter(detail-step); font: 800 14px/1 var(--mono); transform: rotate(-3deg);
+  }
+  .detail-contract { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .detail-contract__item { min-width: 0; padding: 12px 13px; border-left: 2px solid var(--detail-color); background: rgba(255, 255, 255, 0.018); }
+  .detail-contract__item span { color: #9fa39c; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+  .detail-task-heading { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .detail-task-heading h3 { margin: 0; }
+  .detail-task-heading span { color: #929791; font: 700 12px/1.3 var(--mono); text-align: right; text-transform: uppercase; }
+  .epic-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .epic-chip {
+    min-height: 30px; padding: 6px 11px; border: 1px solid #343a37; border-radius: 999px;
+    color: #656b66; background: #0a0c0b; cursor: pointer; font: 700 14px/1.15 var(--mono);
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .epic-chip:hover, .epic-chip:focus-visible { border-color: var(--gold); color: var(--ink); outline: none; }
+  .epic-chip[aria-pressed="true"] { border-color: var(--gold); color: #17140a; background: var(--gold); }
+  .detail-tasks { display: grid; gap: 9px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .detail-task {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start;
+    padding: 10px 0; border-bottom: 1px solid #282e2a;
+  }
+  .detail-task:last-child { border-bottom: 0; }
+  .detail-task__priority {
+    min-width: 34px; padding: 4px 5px; border: 1px solid currentColor; border-radius: 3px 5px 3px 4px;
+    color: var(--gold); font: 800 14px/1 var(--mono); text-align: center; transform: rotate(-1deg);
+  }
+  .detail-task__priority[data-priority="P0"] { color: var(--coral); }
+  .detail-task__priority[data-priority="P2"] { color: var(--cyan); }
+  .detail-task__priority[data-priority="P3"] { color: var(--violet); }
+  .detail-task__copy strong { display: block; color: #c4c7bf; font-size: 14px; line-height: 1.42; }
+  .detail-task__copy small { display: block; margin-top: 4px; color: #8d938d; font: 600 14px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .detail-empty {
+    margin: 12px 0 0; padding: 16px; border: 1px dashed #3c433e; color: #929791;
+    font-size: 14px; line-height: 1.5; text-align: center;
+  }
+
+  .tasks-dialog {
+    position: fixed; z-index: 21; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(920px, 92vw); max-height: 80vh; overflow: auto; overscroll-behavior: contain;
+    border: 1.5px solid var(--gold); border-radius: 6px 9px 5px 8px;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      rgba(13, 16, 15, 0.985);
+    background-size: 100% 28px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 5px 6px 0 rgba(0, 0, 0, 0.34);
+    padding: 22px 26px; opacity: 0; visibility: hidden;
+    transition: opacity 190ms ease, visibility 190ms ease;
+    scrollbar-width: thin; scrollbar-color: #454d47 transparent;
+  }
+  .tasks-dialog.is-open { opacity: 1; visibility: visible; }
+  .tasks-dialog:not(.is-open) { pointer-events: none; }
+  .tasks-dialog__header { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+  .tasks-dialog h2 { margin: 0; font: 700 clamp(22px, 2vw, 30px)/1.05 var(--marker); }
+  .tasks-dialog__scope { margin: 4px 0 0; color: #929791; font: 700 11px/1.4 var(--mono); text-transform: uppercase; }
+  .all-tasks-table { width: 100%; margin-top: 14px; table-layout: fixed; border-collapse: collapse; font-size: 14px; }
+  .all-tasks-table th {
+    padding: 10px 8px; border-bottom: 1px solid #4a514c; color: var(--gold);
+    font: 800 14px/1.2 var(--mono); text-align: left; text-transform: uppercase;
+  }
+  .all-tasks-table th:first-child { width: 62%; }
+  .all-tasks-table th:last-child { width: 38%; }
+  .all-tasks-table td { min-width: 0; padding: 12px 8px; border-bottom: 1px solid #282e2a; vertical-align: top; }
+  .all-tasks-table__task strong { display: block; color: #c4c7bf; font-size: 14px; line-height: 1.42; overflow-wrap: anywhere; }
+  .all-tasks-table__task small { display: block; margin-top: 5px; color: #8d938d; font: 600 14px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .task-blocks__trigger {
+    display: block; width: 100%; min-width: 0; padding: 0; overflow: hidden; border: 0;
+    color: #adb0a9; background: transparent; cursor: help; font-size: 14px; line-height: 1.45;
+    text-align: left; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .task-blocks__trigger:focus-visible { color: var(--ink); outline: 1px dashed var(--cyan); outline-offset: 3px; }
+
+  .block-tooltip {
+    position: fixed; z-index: 40; width: max-content; max-width: min(340px, calc(100vw - 24px));
+    padding: 10px 12px; border: 1px solid var(--cyan); border-radius: 5px 7px 4px 6px;
+    color: #d2d5cd; background: rgba(8, 12, 11, 0.99); box-shadow: 8px 10px 26px rgba(0, 0, 0, 0.52);
+    opacity: 0; visibility: hidden; pointer-events: none; font-size: 14px; line-height: 1.5;
+    transform: translateY(4px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+  }
+  .block-tooltip.is-visible { opacity: 1; visibility: visible; transform: translateY(0); }
+  .block-tooltip span { display: block; }
+
+  @keyframes marker-flow { to { stroke-dashoffset: -36; } }
+  @keyframes draw-in {
+    from { opacity: 0; transform: translateY(8px) rotate(var(--tilt, 0deg)); }
+    to { opacity: 0.58; transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  }
+  .board.is-entering .node { animation: draw-in 420ms both; }
+  .board.is-entering .node:nth-of-type(odd) { animation-delay: 60ms; }
+  .board.is-entering .node:nth-of-type(3n) { animation-delay: 140ms; }
+  .board.is-entering .node:nth-of-type(4n) { animation-delay: 220ms; }
+  .board.is-entering .node:nth-of-type(5n) { animation-delay: 300ms; }
+
+  @media (max-width: 760px) {
+    .topbar { grid-template-columns: 1fr; }
+    .status-stamp { display: none; }
+    .board { min-height: 0; }
+    .board .node { position: static; width: auto !important; margin: 10px 12px; opacity: 1; transform: none; }
+    .connections, .layer-label, .scenario-note, .board-shell::before, .board-shell::after { display: none; }
+    .detail-panel {
+      right: 0; left: 0; top: auto; bottom: 0; width: 100vw; max-width: 100vw;
+      max-height: 80svh; border-radius: 14px 14px 0 0; transform: translateY(24px) scale(var(--panel-scale));
+      transform-origin: bottom center;
+    }
+    .detail-panel.is-open { transform: translateY(0) scale(var(--panel-scale)); }
+    .detail-contract { grid-template-columns: 1fr; }
+    .diagram-footer { flex-direction: column; align-items: flex-start; }
+    .footer-note { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">crateon-bundle · published skills · <a href="crateon-bundle-skills-map.en.html" style="color: inherit">EN</a></p>
+      <h1>Карта скилов Crateon Bundle</h1>
+      <p class="subtitle">Все 20 опубликованных скилов и их причинные связи: вход и планирование &rarr; исполнение под op-watch &rarr; гейт закрытия эпика &rarr; коммиты и upstream-конвейер. Блоки сверены с таблицей README (data-service-паритет); чипы задач — живой срез открытых юнитов docs/tasks.</p>
+    </div>
+    <div class="status-stamp">сверено 2026-07-12<br>каталог 20/20<br>validate-runtime-map</div>
+  </header>
+
+  <div class="scenario-bar" role="group" aria-label="Сценарии">
+    <span class="scenario-label">Сценарии:</span>
+    <button class="scenario-button" type="button" data-scenario="all" aria-pressed="true">Вся система</button>
+    <button class="scenario-button" type="button" id="all-tasks-button" aria-haspopup="dialog">Все задачи</button>
+    <button class="scenario-button" type="button" data-scenario="intake" aria-pressed="false">инициация</button>
+    <button class="scenario-button" type="button" data-scenario="campaign" aria-pressed="false">кампания op-watch</button>
+    <button class="scenario-button" type="button" data-scenario="closure" aria-pressed="false">закрытие эпика</button>
+    <button class="scenario-button" type="button" data-scenario="commit" aria-pressed="false">коммит-петля</button>
+    <button class="scenario-button" type="button" data-scenario="upstream" aria-pressed="false">upstream</button>
+  </div>
+
+  <div class="board-shell">
+    <div class="board is-entering" id="board">
+      <svg class="connections" id="connections" aria-hidden="true"></svg>
+      <span class="layer-label layer-label--intake">вход · планирование</span>
+      <span class="layer-label layer-label--run">исполнение · discovery</span>
+      <span class="layer-label layer-label--closure">закрытие эпика</span>
+      <span class="layer-label layer-label--delivery">коммиты · upstream</span>
+
+      <button class="node node--tour" data-node="op-tour" data-service="op-tour">
+        <span class="node__topline"><span class="node__icon">T</span><span class="node__step">read-only</span></span>
+        <h2>op-tour</h2>
+        <p>Онбординг-карта проекта: структура, архитектура, доки, workflow.</p>
+      </button>
+      <button class="node node--pref" data-node="op-preflight" data-service="op-preflight">
+        <span class="node__topline"><span class="node__icon">&#9873;</span><span class="node__step">checkpoint</span></span>
+        <h2>op-preflight</h2>
+        <p>Гейт перед реализацией: scope, инварианты, риски, feedback-правила.</p>
+      </button>
+      <button class="node node--finder" data-node="op-story-finder" data-service="op-story-finder">
+        <span class="node__topline"><span class="node__icon">&#8981;</span><span class="node__step">read-only</span></span>
+        <h2>op-story-finder</h2>
+        <p>Поиск существующих историй до заведения новых задач.</p>
+      </button>
+      <button class="node node--planner" data-node="op-planner" data-service="op-planner">
+        <span class="node__topline"><span class="node__icon">P</span><span class="node__step">checkpoint</span></span>
+        <h2>op-planner</h2>
+        <p>Из документа/интента — эпики и истории BMAD; сначала чекпоинт.</p>
+      </button>
+      <button class="node node--dockit" data-node="project-doc-kit" data-service="project-doc-kit">
+        <span class="node__topline"><span class="node__icon">K</span><span class="node__step">generator</span></span>
+        <h2>project-doc-kit</h2>
+        <p>Датированный полный док-кит: архитектура, контракты, карта кода, DOCX.</p>
+      </button>
+
+      <button class="node node--watch" data-node="op-watch" data-service="op-watch">
+        <span class="node__topline"><span class="node__icon">&#8635;</span><span class="node__step">диспетчер</span></span>
+        <h2>op-watch</h2>
+        <p>Кампания до done под goal-циклом: один ограниченный шаг за вызов; состояние пишут скрипты.</p>
+      </button>
+      <button class="node node--debug" data-node="op-debug" data-service="op-debug">
+        <span class="node__topline"><span class="node__icon">D</span><span class="node__step">checkpoint</span></span>
+        <h2>op-debug</h2>
+        <p>Один подтверждённый дефект: репро, минимальный фикс, верификация.</p>
+      </button>
+      <button class="node node--audit" data-node="op-audit" data-service="op-audit">
+        <span class="node__topline"><span class="node__icon">A</span><span class="node__step">generator</span></span>
+        <h2>op-audit</h2>
+        <p>Мульти-лейновый аудит с adversarial-верификацией; ledger между прогонами.</p>
+      </button>
+      <button class="node node--debt" data-node="op-debt-scan" data-service="op-debt-scan">
+        <span class="node__topline"><span class="node__icon">&#8721;</span><span class="node__step">read-only</span></span>
+        <h2>op-debt-scan</h2>
+        <p>Индикаторы техдолга и давление недостающих тестов, ранжировано.</p>
+      </button>
+      <button class="node node--map" data-node="runtime-map-updater" data-service="runtime-map-updater">
+        <span class="node__topline"><span class="node__icon">M</span><span class="node__step">checkpoint</span></span>
+        <h2>runtime-map-updater</h2>
+        <p>Интерактивная HTML-карта как проверяемый артефакт из доков и задач.</p>
+      </button>
+
+      <button class="node node--drift" data-node="op-drift-check" data-service="op-drift-check">
+        <span class="node__topline"><span class="node__icon">&Delta;</span><span class="node__step">read-only · гейт 1</span></span>
+        <h2>op-drift-check</h2>
+        <p>Дрифт архитектуры: доки против фактического кода.</p>
+      </button>
+      <button class="node node--docup" data-node="op-docup" data-service="op-docup">
+        <span class="node__topline"><span class="node__icon">&#8646;</span><span class="node__step">checkpoint · гейт 2</span></span>
+        <h2>op-docup</h2>
+        <p>Синк изменений кода с документацией; сначала DOCUP_CHECKPOINT.</p>
+      </button>
+      <button class="node node--decision" data-node="op-decision-memory" data-service="op-decision-memory">
+        <span class="node__topline"><span class="node__icon">&#9998;</span><span class="node__step">checkpoint · гейт 4</span></span>
+        <h2>op-decision-memory</h2>
+        <p>Долговечные решения (ADR-лог) после эпика — последним шагом гейта.</p>
+      </button>
+      <button class="node node--fharvest" data-node="op-feedback-harvest" data-service="op-feedback-harvest">
+        <span class="node__topline"><span class="node__icon">&#9851;</span><span class="node__step">checkpoint</span></span>
+        <h2>op-feedback-harvest</h2>
+        <p>Из коммитов, багов и ревью — durable-правила для префлайта.</p>
+      </button>
+
+      <button class="node node--dry" data-node="dry-commit" data-service="dry-commit">
+        <span class="node__topline"><span class="node__icon">&#9744;</span><span class="node__step">checkpoint</span></span>
+        <h2>dry-commit</h2>
+        <p>Группировка незакоммиченного по темам в COMMIT_PLAN.md.</p>
+      </button>
+      <button class="node node--baby" data-node="baby-commit" data-service="baby-commit">
+        <span class="node__topline"><span class="node__icon">&#9986;</span><span class="node__step">checkpoint</span></span>
+        <h2>baby-commit</h2>
+        <p>Дробление диффа на атомарные коммиты с бюджетом строк.</p>
+      </button>
+      <button class="node node--chlog" data-node="changelog" data-service="changelog">
+        <span class="node__topline"><span class="node__icon">&#182;</span><span class="node__step">checkpoint</span></span>
+        <h2>changelog</h2>
+        <p>Секция keepachangelog из git-истории; сначала превью.</p>
+      </button>
+      <button class="node node--uharvest" data-node="upstream-harvest" data-service="upstream-harvest">
+        <span class="node__topline"><span class="node__icon">&#8595;</span><span class="node__step">checkpoint</span></span>
+        <h2>upstream-harvest</h2>
+        <p>Разбор upstream-коммитов в BMAD-доки и тесты.</p>
+      </button>
+      <button class="node node--ucherry" data-node="upstream-cherry" data-service="upstream-cherry">
+        <span class="node__topline"><span class="node__icon">&#10004;</span><span class="node__step">checkpoint</span></span>
+        <h2>upstream-cherry</h2>
+        <p>Cherry-pick изменений с air-gap-тестированием.</p>
+      </button>
+      <button class="node node--uissues" data-node="upstream-issues" data-service="upstream-issues">
+        <span class="node__topline"><span class="node__icon">#</span><span class="node__step">checkpoint</span></span>
+        <h2>upstream-issues</h2>
+        <p>GitHub issues/PR — в BMAD-эпики и истории.</p>
+      </button>
+
+      <div class="scenario-note" id="scenario-note" hidden><strong id="scenario-note-title"></strong><span id="scenario-note-text"></span></div>
+    </div>
+  </div>
+
+  <div class="diagram-footer">
+    <div class="legend">
+      <span><i style="--swatch: var(--gold)"></i>вход · планирование</span>
+      <span><i style="--swatch: var(--mint)"></i>исполнение</span>
+      <span><i style="--swatch: var(--violet)"></i>закрытие эпика</span>
+      <span><i style="--swatch: var(--coral)"></i>коммиты</span>
+      <span><i style="--swatch: var(--cyan)"></i>upstream · карты</span>
+    </div>
+    <p class="footer-note">ребро — причинная передача работы между скилами · генераторы и read-only без стрелок к каждому потребителю</p>
+  </div>
+</div>
+
+<div class="detail-backdrop" id="backdrop"></div>
+<aside class="detail-panel" id="detail-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+  <div class="detail-panel__header">
+    <div>
+      <p class="detail-panel__kicker" id="panel-kicker"></p>
+      <h2 id="panel-title"></h2>
+    </div>
+    <button class="close-x" id="panel-close" aria-label="Закрыть">&times;</button>
+  </div>
+  <div class="detail-panel__body" id="panel-body"></div>
+</aside>
+
+<div class="tasks-dialog" id="tasks-dialog" role="dialog" aria-modal="true" aria-labelledby="tasks-title">
+  <div class="tasks-dialog__header">
+    <div>
+      <h2 id="tasks-title">Все задачи</h2>
+      <p class="tasks-dialog__scope">срез бэклога docs/tasks · сверено 2026-07-12</p>
+    </div>
+    <button class="close-x" id="tasks-close" aria-label="Закрыть">&times;</button>
+  </div>
+  <div class="epic-filters" id="epic-filters" role="group" aria-label="Фильтр по эпикам"></div>
+  <table class="all-tasks-table">
+    <thead><tr><th>Эпик · задача</th><th>Блоки</th></tr></thead>
+    <tbody id="all-tasks-body"></tbody>
+  </table>
+</div>
+<div class="block-tooltip" id="block-tooltip" role="tooltip"></div>
+
+<script>
+  "use strict";
+
+  const LAYERS = {
+    "op-tour": "вход · планирование", "op-preflight": "вход · планирование", "op-story-finder": "вход · планирование",
+    "op-planner": "вход · планирование", "project-doc-kit": "вход · планирование",
+    "op-watch": "исполнение · discovery", "op-debug": "исполнение · discovery", "op-audit": "исполнение · discovery",
+    "op-debt-scan": "исполнение · discovery", "runtime-map-updater": "исполнение · discovery",
+    "op-drift-check": "закрытие эпика · гейт 1", "op-docup": "закрытие эпика · гейт 2",
+    "op-decision-memory": "закрытие эпика · гейт 4", "op-feedback-harvest": "закрытие эпика · поддержка",
+    "dry-commit": "коммиты", "baby-commit": "коммиты", "changelog": "коммиты",
+    "upstream-harvest": "upstream", "upstream-cherry": "upstream", "upstream-issues": "upstream",
+  };
+
+  const nodeDetails = {
+    "op-tour": {
+      summary: "Read-only онбординг: быстрая карта структуры, архитектуры, доков и workflow незнакомого репозитория — точка входа для нового оператора.",
+      steps: [
+        "Определяет объявленный layout доков (spec-systems, BMAD или flat-эпики), не полагаясь на дефолтные имена.",
+        "Собирает обзор: структура, ключевые подсистемы, последняя активность.",
+        "Отдаёт секционный тур в разговор — по запросу только нужную секцию.",
+      ],
+      boundaries: [
+        "Никогда не пишет файлы — только отчёт в разговор.",
+        "Не генерирует полный док-кит — это project-doc-kit.",
+        "Не аудит и не поиск долга — только ориентация.",
+      ],
+      tasks: [],
+    },
+    "op-preflight": {
+      summary: "Гейт перед нетривиальной реализацией: превращает project-feedback в явный план — scope, инварианты, риски, proof-path; блокирует предсказуемые регрессии до кода.",
+      steps: [
+        "Резолвит контракт проекта (AGENTS/HANDBOOK, Stack Profile) и выбирает релевантные feedback-правила.",
+        "Строит входную рамку: User Spec, scope, инварианты, риск-лист, PR/security-риск, proof-path.",
+        "Скорит чек-лист PASS/WATCH/FAIL и выносит вердикт — по FAIL код не пишется.",
+      ],
+      boundaries: [
+        "Пишет только по явному запросу scaffold — иначе отчёт в разговор.",
+        "Не сканирует git-историю — это op-feedback-harvest.",
+        "Stack-гейт без объявленного языка молча выключен — это сам по себе WATCH.",
+      ],
+      tasks: [],
+    },
+    "op-story-finder": {
+      summary: "Read-only поиск по существующим историям и эпикам до заведения новых задач — защита от дублей и повторного изобретения юнитов.",
+      steps: [
+        "Определяет систему спецификаций проекта (BMAD stories или flat-эпики) по объявленному layout.",
+        "Ищет по ключевым словам в канонических статус-заголовках юнитов.",
+        "Возвращает совпадения со статусами — открытое переиспользуется, закрытое не дублируется.",
+      ],
+      boundaries: [
+        "Ничего не создаёт — создание юнитов у op-planner.",
+        "Ноль найденного рядом с видимыми эпиками = промах детекции, не пустой бэклог.",
+        "Не переоткрывает закрытые юниты — только сообщает о них.",
+      ],
+      tasks: [],
+    },
+    "op-planner": {
+      summary: "Из документа или интента — структурированный бэклог (эпики + истории BMAD или объявленной системы); по умолчанию PLANNER_CHECKPOINT.md, материализация только с --apply.",
+      steps: [
+        "Проверяет существование целей: не минтит юнит против удалённого кода.",
+        "Консультирует op-story-finder против дублей и переиспользует нумерацию.",
+        "Пишет чекпоинт; с --apply — ровно объявленные файлы эпиков/историй.",
+      ],
+      boundaries: [
+        "Не исполняет работу — бэклог потребляет op-watch.",
+        "Никогда не материализует устаревший/дублирующий юнит на --apply.",
+        "Коммиты не делает — это baby-commit/dry-commit или человек.",
+      ],
+      tasks: [],
+    },
+    "project-doc-kit": {
+      summary: "Генератор полного датированного док-кита: архитектура, контракты, карта кода, история, долг, диаграммы, опционально DOCX — всё строго внутри docs/<дата>/.",
+      steps: [
+        "Собирает фактуру из кода и git-истории, не из памяти.",
+        "Генерирует секции кита с диаграммами и таблицами.",
+        "Складывает всё в один датированный каталог — прошлые киты не трогаются.",
+      ],
+      boundaries: [
+        "Пишет только внутри своего датированного каталога.",
+        "Не онбординг-тур (op-tour) и не синк живых доков (op-docup).",
+        "Кит — снимок на дату, не поддерживаемый источник правды.",
+      ],
+      tasks: [],
+    },
+    "op-watch": {
+      summary: "Тонкий диспетчер кампании под goal-циклом: один ограниченный шаг за вызов — читает состояние, делегирует под-шаг, обновляет состояние скриптами, выдаёт детерминированный вердикт.",
+      steps: [
+        "derive атомарно замораживает charter-факты (init.mjs); gate-юниты закрытия сеются сразу.",
+        "Диспетчеризует по состоянию: дефект → op-debug, build → preflight+реализация, verify → accept.mjs.",
+        "verdict.mjs считает CLEAN-DONE/CLEAN-HANDOFF/CONTINUE по состоянию — не по прозе.",
+      ],
+      boundaries: [
+        "Владеет только состоянием кампании (docs/.work) — реальные изменения у делегатов.",
+        "Critical/структурные юниты не автофиксятся — уходят человеку.",
+        "Состояние никогда не редактируется руками — только mark/accept/validate-state.",
+      ],
+      tasks: [],
+    },
+    "op-debug": {
+      summary: "Один подтверждённый дефект end-to-end: воспроизведение (или статическое подтверждение), корневая причина, минимальный фикс, верификация; умеет честно сказать «уже починено».",
+      steps: [
+        "Воспроизводит или статически подтверждает дефект на текущем HEAD.",
+        "Находит корневую причину и делает минимальный достаточный фикс.",
+        "Верифицирует тем же путём, каким воспроизводил; DONE — already fixed — валидный исход.",
+      ],
+      boundaries: [
+        "Один дефект за прогон — discovery-обход принадлежит op-audit.",
+        "Не фабрикует патч, если дефект не подтвердился.",
+        "Пишет фикс только под --apply; иначе — отчёт.",
+      ],
+      tasks: [],
+    },
+    "op-audit": {
+      summary: "Мульти-лейновый due-diligence аудит (секреты, поверхности, архитектура, supply-chain, качество, CI, тесты, perf) с adversarial-верификацией каждой High/Critical находки и стабильным ledger.",
+      steps: [
+        "Замораживает scope (резолвя re-export-шимы), гонит лейны параллельно с цитатами file:line.",
+        "Каждую серьёзную находку перепроверяет независимый скептик — опровергнутое не попадает в отчёт.",
+        "Скорит детерминированным кодом и мёржит в audit-findings.json по стабильным id.",
+      ],
+      boundaries: [
+        "Discovery сеет кампанию; scoped-verify служит ей — стойка задаётся charter'ом.",
+        "Не чинит найденное — ремедиация у op-watch/op-debug.",
+        "--report-only не пишет ничего; ledger — только в свой файл.",
+      ],
+      tasks: [],
+    },
+    "op-debt-scan": {
+      summary: "Read-only скан техдолга: размеры, сложность, дубли, мёртвый код, давление недостающих тестов, подозрительные артефакты — ранжировано воспроизводимой формулой приоритета.",
+      steps: [
+        "Читает манифесты и lockfiles (живой outdated-чек запрещён allowed-tools — сказано явно).",
+        "Скорит по заякоренной рубрике 1–5 с арифметическим самочек-проходом.",
+        "Отдаёт ранжированный список с ROI-обоснованием каждой позиции.",
+      ],
+      boundaries: [
+        "Ничего не пишет и не чинит — выход потребляет op-planner.",
+        "Не аудит безопасности — это лейны op-audit.",
+        "Отказ от живого чека зависимостей — по контракту, с причиной.",
+      ],
+      tasks: [],
+    },
+    "runtime-map-updater": {
+      summary: "Поддерживает интерактивную HTML-карту (рантайма или скилов) как проверяемый артефакт: узлы из доков/манифестов, чипы — живой срез открытых задач, контракт взаимодействия — регексами валидатора.",
+      steps: [
+        "Резолвит источники из объявленного layout; код/манифесты авторитетнее доков — каталог чинится в том же изменении.",
+        "Срез задач пересчитывается при каждом обновлении; закрытые токены в nodeDetails запрещены.",
+        "validate-runtime-map.mjs проверяет паритеты и контракт панели; визуальный рендер — отдельная проверка.",
+      ],
+      boundaries: [
+        "Пишет только карту (+каталог-док и e2e-спеку при необходимости).",
+        "Рантайм-код приложения не трогается никогда.",
+        "Зелёный валидатор ≠ готово — design-language.md обязателен для нового/рестайла.",
+      ],
+      tasks: [],
+    },
+    "op-drift-check": {
+      summary: "Read-only гейт 1 закрытия эпика: расхождения доков с фактическим кодом — CRITICAL/WARNING по каждому дрифту; находит то, что op-docup чинит.",
+      steps: [
+        "Резолвит объявленный layout и re-export-шимы до флага «отсутствует».",
+        "Сверяет утверждения доков с кодом; статус-теги парсятся канонически (priority ≠ status).",
+        "Отчёт по уровням; ноль находок — честный зелёный, не молчание.",
+      ],
+      boundaries: [
+        "Ничего не пишет — реконсиляция у op-docup.",
+        "Не проверяет визуал карт — это валидатор runtime-map.",
+        "Worktree/не-авторитетные деревья исключены из сверки.",
+      ],
+      tasks: [],
+    },
+    "op-docup": {
+      summary: "Гейт 2: синк изменений кода с документацией — сначала локация baseline (шаг 0), потом DOCUP_CHECKPOINT.md, применение только с --apply и с пересчётом значений на момент apply.",
+      steps: [
+        "Шаг 0: находит sync-baseline — от какого состояния считать дельту.",
+        "Мапит изменения на истории/эпики/индексы (включая index/table-only дрифт).",
+        "Чекпоинт по умолчанию; --apply пишет ровно объявленные доки, значения пересчитываются заново.",
+      ],
+      boundaries: [
+        "Чекпоинт-значения — гипотеза; на apply всё перепроверяется от репо.",
+        "Не создаёт новые юниты — это op-planner.",
+        "Сторонние грязные файлы не трогаются.",
+      ],
+      tasks: [],
+    },
+    "op-decision-memory": {
+      summary: "Гейт 4, последний перед DONE: извлекает долговечные решения (ПОЧЕМУ + отвергнутые альтернативы) из закрытого эпика в ADR-лог; по умолчанию только предлагает.",
+      steps: [
+        "Кандидаты — из эпик/стори-заметок прежде коммит-месседжей.",
+        "Гранулярность: одно решение — один ADR, не по коммиту.",
+        "--apply идемпотентно аппендит в decisions.yaml (идентичность по сути, не по номеру).",
+      ],
+      boundaries: [
+        "Не changelog: WHAT-per-release живёт отдельно.",
+        "Бежит после docup — иначе фиксируется устаревшая rationale.",
+        "Пишет только decisions.yaml (+экспорт по запросу).",
+      ],
+      tasks: [],
+    },
+    "op-feedback-harvest": {
+      summary: "Превращает историю проекта (коммиты, баги, ревью, инциденты, agent-контракты) в durable-правила docs/feedback для префлайта; окно — явные хэши или с последнего изменения feedback.",
+      steps: [
+        "Классифицирует коммиты в кандидатов; правила — durable, не summary изменений.",
+        "Pointer-form только с реальным doc#anchor; дубли — после чтения тела совпавшего правила.",
+        "Чекпоинт с 5 секциями; --apply трогает только docs/feedback/* и index.",
+      ],
+      boundaries: [
+        "Не запускается неявно из префлайта — только по явной просьбе.",
+        "Секреты в правила не попадают никогда — редакция до минимума.",
+        "validate-feedback.mjs — механическая проверка скаффолда после apply.",
+      ],
+      tasks: [],
+    },
+    "dry-commit": {
+      summary: "Репетиция коммитов: группирует незакоммиченные изменения по темам в COMMIT_PLAN.md с готовыми сообщениями — ничего не стейджит.",
+      steps: [
+        "Читает полный дифф рабочего дерева.",
+        "Группирует по темам с обоснованием границ.",
+        "Пишет COMMIT_PLAN.md — единственный артефакт.",
+      ],
+      boundaries: [
+        "git add/commit не выполняет никогда.",
+        "Исполнение плана — baby-commit или человек.",
+        "Чужие чекпоинт-файлы в план не включает.",
+      ],
+      tasks: [],
+    },
+    "baby-commit": {
+      summary: "Дробит большой дифф на атомарные коммиты в бюджете строк (по умолчанию 300 изменённых строк кода; проект может переопределить), сначала BABY_COMMIT_PLAN.md.",
+      steps: [
+        "Строит план дробления с бюджетом на коммит.",
+        "С --apply/--commit стейджит и коммитит по одному шагу.",
+        "Смешанные rm+mod пути стейджит раздельно — известный fatal-паттерн git add.",
+      ],
+      boundaries: [
+        "Без --apply — только план.",
+        "Не пушит — remote-операции у человека.",
+        "Бюджет — правило скила; проектная норма объявляется в контракте проекта.",
+      ],
+      tasks: [],
+    },
+    "changelog": {
+      summary: "Секция keepachangelog из git-истории: сгруппированные Added/Changed/Fixed с человеческими формулировками; сначала превью в разговор.",
+      steps: [
+        "Читает диапазон истории (тег/диапазон/последний релиз).",
+        "Группирует по типам изменений, переписывает в user-facing язык.",
+        "Превью по умолчанию; запись в CHANGELOG.md — по подтверждению.",
+      ],
+      boundaries: [
+        "Не ADR-лог — WHY живёт в decision-memory.",
+        "Не изобретает изменения — только то, что в истории.",
+        "Одна строка на скил на релиз — плотность решает читаемость.",
+      ],
+      tasks: [],
+    },
+    "upstream-harvest": {
+      summary: "Разбор upstream-коммитов стороннего репо в BMAD-доки и тесты для переноса; чекпоинт сначала, детерминированное финальное сообщение с абсолютными путями.",
+      steps: [
+        "Анализирует диапазон upstream-коммитов по значимости.",
+        "Генерирует эпики/истории/тесты в upstreams_docs/<проект>.",
+        "Финальный блок — verbatim-поля: Repository, Upstream code/docs, Range.",
+      ],
+      boundaries: [
+        "Исходный upstream-код не модифицируется.",
+        "Перенос изменений — upstream-cherry, не этот скил.",
+        "Без --apply — только чекпоинт.",
+      ],
+      tasks: [],
+    },
+    "upstream-cherry": {
+      summary: "Перенос выбранных upstream-изменений с air-gap-тестированием: proposal + тесты и есть чекпоинт — сначала доказательство совместимости, потом код.",
+      steps: [
+        "Выбирает изменения для переноса и строит proposal.",
+        "Гоняет air-gap-тесты на изолированной копии.",
+        "Применяет перенос только после зелёных тестов и подтверждения.",
+      ],
+      boundaries: [
+        "Не тащит изменения без проходящих тестов.",
+        "Анализ всего диапазона — upstream-harvest.",
+        "Конфликты решаются в пользу локальных инвариантов проекта.",
+      ],
+      tasks: [],
+    },
+    "upstream-issues": {
+      summary: "GitHub issues/PR стороннего репо — в BMAD-эпики и истории: ограниченный чекпоинт сначала, чтобы бэклог не разбухал от чужого трекера.",
+      steps: [
+        "Собирает issues/PR по фильтру (labels, состояние, диапазон).",
+        "Мапит на эпики/истории с дедупликацией против существующего бэклога.",
+        "Чекпоинт с bounded-набором; материализация — по подтверждению.",
+      ],
+      boundaries: [
+        "Не выгружает трекер целиком — окно всегда ограничено.",
+        "Нумерация юнитов — по конвенции op-planner.",
+        "Ссылки на первоисточник обязательны в каждой истории.",
+      ],
+      tasks: [],
+    },
+  };
+
+  const EDGES = [
+    { from: "op-tour", to: "op-story-finder", label: "онбординг", color: "var(--gold)", scenarios: ["intake"] },
+    { from: "op-story-finder", to: "op-planner", label: "находки → юниты", color: "var(--gold)", scenarios: ["intake"] },
+    { from: "op-planner", to: "op-watch", label: "бэклог → кампания", color: "var(--mint)", scenarios: ["intake", "campaign"] },
+    { from: "op-debt-scan", to: "op-planner", label: "долг → юниты", color: "var(--gold)", scenarios: ["intake"], kind: "return" },
+    { from: "op-preflight", to: "op-watch", label: "гейт юнита", color: "var(--mint)", scenarios: ["campaign"] },
+    { from: "op-watch", to: "op-debug", label: "дефект", color: "var(--mint)", scenarios: ["campaign"] },
+    { from: "op-watch", to: "op-audit", label: "verify / discovery", color: "var(--mint)", scenarios: ["campaign"] },
+    { from: "op-audit", to: "op-watch", label: "ledger ingest", color: "var(--mint)", scenarios: ["campaign"], kind: "return" },
+    { from: "op-watch", to: "op-drift-check", label: "гейт закрытия", color: "var(--violet)", scenarios: ["closure"] },
+    { from: "op-drift-check", to: "op-docup", label: "дрифт → синк", color: "var(--violet)", scenarios: ["closure"] },
+    { from: "op-docup", to: "op-decision-memory", label: "ADR последним", color: "var(--violet)", scenarios: ["closure"] },
+    { from: "op-docup", to: "runtime-map-updater", label: "доки → карта", color: "var(--cyan)", scenarios: ["closure"] },
+    { from: "op-feedback-harvest", to: "op-preflight", label: "правила в гейт", color: "var(--coral)", scenarios: ["closure"], kind: "return" },
+    { from: "dry-commit", to: "baby-commit", label: "план → коммиты", color: "var(--coral)", scenarios: ["commit"] },
+    { from: "baby-commit", to: "changelog", label: "история → релиз", color: "var(--coral)", scenarios: ["commit"] },
+    { from: "upstream-harvest", to: "upstream-cherry", label: "разбор → перенос", color: "var(--cyan)", scenarios: ["upstream"] },
+    { from: "upstream-issues", to: "op-planner", label: "issues → юниты", color: "var(--cyan)", scenarios: ["upstream"], kind: "return" },
+  ];
+
+  const SCENARIO_NOTES = {
+    all: ["Вся система", "20 опубликованных скилов: вход и планирование, исполнение под op-watch, гейт закрытия эпика, коммит-петля и upstream-конвейер."],
+    intake: ["Инициация", "op-tour ориентирует, story-finder ищет существующее, planner превращает документ в бэклог; debt-scan подкидывает юниты долга."],
+    campaign: ["Кампания op-watch", "preflight гейтит вход юнита; watch делегирует дефекты в debug, verify/discovery в audit; ledger возвращается ingest'ом."],
+    closure: ["Закрытие эпика", "drift находит расхождения, docup чинит, decision-memory пишет ADR последним; feedback-harvest возвращает правила в префлайт; карта обновляется от доков."],
+    commit: ["Коммит-петля", "dry-commit репетирует план, baby-commit исполняет его атомарными шагами, changelog превращает историю в релиз-ноты."],
+    upstream: ["Upstream-конвейер", "harvest разбирает чужие коммиты в доки и тесты, cherry переносит с air-gap-проверкой, issues пополняют бэклог через planner."],
+  };
+
+  const board = document.getElementById("board");
+  const svg = document.getElementById("connections");
+  const panel = document.getElementById("detail-panel");
+  const backdrop = document.getElementById("backdrop");
+  const tasksDialog = document.getElementById("tasks-dialog");
+  const tooltip = document.getElementById("block-tooltip");
+  let lastFocused = null;
+
+  // Zoom-out compensation from the load-time DPR baseline; never neutralize zoom-in.
+  const initialDevicePixelRatio = window.devicePixelRatio || 1;
+  function applyZoomCompensation() {
+    const currentDevicePixelRatio = window.devicePixelRatio || 1;
+    const ratio = initialDevicePixelRatio / currentDevicePixelRatio;
+    document.documentElement.style.setProperty("--panel-scale", String(Math.max(1, ratio)));
+  }
+  window.addEventListener("resize", applyZoomCompensation);
+  applyZoomCompensation();
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function edgeGeometry(e, shellRect) {
+    const a = board.querySelector(`[data-node="${e.from}"]`).getBoundingClientRect();
+    const b = board.querySelector(`[data-node="${e.to}"]`).getBoundingClientRect();
+    const x1 = a.left - shellRect.left + a.width / 2, y1 = a.top - shellRect.top + a.height / 2;
+    const x2 = b.left - shellRect.left + b.width / 2, y2 = b.top - shellRect.top + b.height / 2;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2 + (e.kind === "return" ? 46 : -22);
+    return { d: `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`, lx: mx, ly: (y1 + y2) / 2 + (e.kind === "return" ? 30 : -16) };
+  }
+  function drawEdges(activeScenario) {
+    const shellRect = board.getBoundingClientRect();
+    svg.setAttribute("viewBox", `0 0 ${shellRect.width} ${shellRect.height}`);
+    svg.innerHTML = "";
+    for (const e of EDGES) {
+      const g = edgeGeometry(e, shellRect);
+      const isActive = activeScenario === "all" || (activeScenario && e.scenarios.includes(activeScenario));
+      const shadow = document.createElementNS(SVGNS, "path");
+      shadow.setAttribute("d", g.d);
+      shadow.setAttribute("class", "edge edge-shadow");
+      svg.appendChild(shadow);
+      const p = document.createElementNS(SVGNS, "path");
+      p.setAttribute("d", g.d);
+      p.setAttribute("class", `edge${isActive ? " is-active" : ""}`);
+      p.style.setProperty("--edge-color", e.color);
+      svg.appendChild(p);
+      const t = document.createElementNS(SVGNS, "text");
+      t.setAttribute("x", g.lx); t.setAttribute("y", g.ly);
+      t.setAttribute("class", "edge-label"); t.setAttribute("text-anchor", "middle");
+      t.textContent = e.label;
+      if (isActive) t.style.fill = "var(--ink)";
+      svg.appendChild(t);
+    }
+    board.querySelectorAll(".node").forEach((n) => {
+      const touched = activeScenario === "all" ||
+        EDGES.some((e) => e.scenarios.includes(activeScenario) && (e.from === n.dataset.node || e.to === n.dataset.node));
+      n.classList.toggle("is-active", Boolean(touched));
+      n.classList.toggle("is-dimmed", Boolean(!touched));
+    });
+    const note = document.getElementById("scenario-note");
+    const [title, text] = SCENARIO_NOTES[activeScenario] || SCENARIO_NOTES.all;
+    document.getElementById("scenario-note-title").textContent = title;
+    document.getElementById("scenario-note-text").textContent = text;
+    note.hidden = false;
+  }
+  window.addEventListener("resize", () => drawEdges(currentScenario));
+
+  // "Вся система" is the resting state: selecting a route narrows the view,
+  // re-clicking it returns to the fully-lit board.
+  let currentScenario = "all";
+  document.querySelectorAll(".scenario-button[data-scenario]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentScenario = currentScenario === btn.dataset.scenario ? "all" : btn.dataset.scenario;
+      document.querySelectorAll(".scenario-button[data-scenario]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.scenario === currentScenario)));
+      drawEdges(currentScenario);
+    });
+  });
+
+  // ---- shared epic-selection state (node panels + the all-tasks dialog read the SAME set)
+  const taskRefRe = /^(P\d)\s*·\s*([A-Za-z0-9_.-]+\.md)\s*·\s*([A-Za-z0-9 -]+?)\s*—\s*(.*)$/;
+  const allTasks = [];
+  for (const [nodeId, d] of Object.entries(nodeDetails)) {
+    for (const t of d.tasks) {
+      const m = taskRefRe.exec(t);
+      if (!m) continue;
+      const key = `${m[2]} · ${m[3]}`;
+      let entry = allTasks.find((x) => x.key === key);
+      if (!entry) { entry = { key, priority: m[1], epic: m[2], summary: m[4], nodes: [] }; allTasks.push(entry); }
+      entry.nodes.push(nodeId);
+    }
+  }
+  const epicNames = [...new Set(allTasks.map((t) => t.epic))];
+  const selectedEpics = new Set(epicNames);
+
+  function chipFor(name) {
+    const chip = document.createElement("button");
+    chip.className = "epic-chip";
+    chip.textContent = name;
+    chip.setAttribute("aria-pressed", String(selectedEpics.has(name)));
+    chip.addEventListener("click", () => {
+      selectedEpics.has(name) ? selectedEpics.delete(name) : selectedEpics.add(name);
+      renderAllViews();
+      if (openNodeId) fillPanel(openNodeId);
+    });
+    return chip;
+  }
+  function renderEpicChips(container) {
+    container.innerHTML = "";
+    if (!epicNames.length) {
+      const s = document.createElement("span");
+      s.className = "detail-empty";
+      s.textContent = "Открытых пер-скиловых задач нет — эпики бандла закрыты; общий долг живёт на карте тулчейна.";
+      container.appendChild(s); return;
+    }
+    for (const name of epicNames) container.appendChild(chipFor(name));
+  }
+
+  function renderTasksTable() {
+    const body = document.getElementById("all-tasks-body");
+    body.innerHTML = "";
+    for (const t of allTasks) {
+      if (!selectedEpics.has(t.epic)) continue;
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      td1.className = "all-tasks-table__task";
+      td1.innerHTML = `<strong>${t.summary}</strong><small>${t.priority} · ${t.key}</small>`;
+      const td2 = document.createElement("td");
+      const trigger = document.createElement("button");
+      trigger.className = "task-blocks__trigger";
+      trigger.type = "button";
+      trigger.textContent = t.nodes.join(", ");
+      const show = () => {
+        tooltip.innerHTML = t.nodes.map((b) => `<span>${b}</span>`).join("");
+        tooltip.classList.add("is-visible");
+        const r = trigger.getBoundingClientRect();
+        tooltip.style.left = `${Math.min(r.left, window.innerWidth - 360)}px`;
+        tooltip.style.top = `${r.bottom + 6}px`;
+      };
+      const hide = () => tooltip.classList.remove("is-visible");
+      trigger.addEventListener("mouseenter", show);
+      trigger.addEventListener("mouseleave", hide);
+      trigger.addEventListener("focus", show);
+      trigger.addEventListener("blur", hide);
+      td2.appendChild(trigger);
+      tr.append(td1, td2);
+      body.appendChild(tr);
+    }
+  }
+
+  let openNodeId = null;
+  function fillPanel(nodeId) {
+    const d = nodeDetails[nodeId];
+    const nodeEl = board.querySelector(`[data-node="${nodeId}"]`);
+    const accent = getComputedStyle(nodeEl).getPropertyValue("--node-color").trim();
+    panel.style.setProperty("--detail-color", accent);
+    document.getElementById("panel-kicker").textContent = LAYERS[nodeId] || "";
+    document.getElementById("panel-title").textContent = nodeEl.querySelector("h2").textContent;
+    const visible = d.tasks.filter((t) => { const m = taskRefRe.exec(t); return m && selectedEpics.has(m[2]); });
+    const taskItems = visible.map((t) => {
+      const m = taskRefRe.exec(t);
+      return `<li class="detail-task">
+        <span class="detail-task__priority" data-priority="${m[1]}">${m[1]}</span>
+        <span class="detail-task__copy"><strong>${m[4]}</strong><small>${m[2]} · ${m[3]}</small></span>
+      </li>`;
+    }).join("");
+    document.getElementById("panel-body").innerHTML = `
+      <p class="detail-summary">${d.summary}</p>
+      <div class="detail-section"><h3>Шаги исполнения</h3>
+        <ol class="detail-steps">${d.steps.map((s) => `<li>${s}</li>`).join("")}</ol></div>
+      <div class="detail-section"><h3>Границы</h3>
+        <div class="detail-contract">${d.boundaries.map((s) => `<div class="detail-contract__item"><span>${s}</span></div>`).join("")}</div></div>
+      <div class="detail-section">
+        <div class="detail-task-heading"><h3>Открытые задачи</h3><span>срез docs/tasks</span></div>
+        <div class="epic-filters" data-panel-chips></div>
+        ${visible.length ? `<ul class="detail-tasks">${taskItems}</ul>` : '<div class="detail-empty">Подтверждённого открытого долга нет.</div>'}`;
+    renderEpicChips(document.querySelector("[data-panel-chips]"));
+  }
+  function openPanel(nodeId, opener) {
+    lastFocused = opener;
+    openNodeId = nodeId;
+    board.querySelectorAll(".node").forEach((n) => n.classList.toggle("is-selected", n.dataset.node === nodeId));
+    fillPanel(nodeId);
+    panel.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.getElementById("panel-close").focus();
+  }
+  function closeOverlays() {
+    panel.classList.remove("is-open");
+    tasksDialog.classList.remove("is-open");
+    backdrop.classList.remove("is-open");
+    tooltip.classList.remove("is-visible");
+    board.querySelectorAll(".node").forEach((n) => n.classList.remove("is-selected"));
+    openNodeId = null;
+    if (lastFocused) { lastFocused.focus(); lastFocused = null; }
+  }
+  board.querySelectorAll(".node").forEach((n) => n.addEventListener("click", () => openPanel(n.dataset.node, n)));
+  document.getElementById("panel-close").addEventListener("click", closeOverlays);
+  document.getElementById("tasks-close").addEventListener("click", closeOverlays);
+  backdrop.addEventListener("click", closeOverlays);
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeOverlays(); });
+
+  document.getElementById("all-tasks-button").addEventListener("click", (ev) => {
+    lastFocused = ev.currentTarget;
+    renderAllViews();
+    tasksDialog.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.getElementById("tasks-close").focus();
+  });
+
+  function renderAllViews() {
+    renderEpicChips(document.getElementById("epic-filters"));
+    renderTasksTable();
+  }
+
+  renderAllViews();
+  drawEdges(currentScenario);
+  setTimeout(() => board.classList.remove("is-entering"), 900);
+</script>
+</body>
+</html>
