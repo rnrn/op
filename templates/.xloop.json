@@ -1,0 +1,6 @@
+{
+  "maxIterations": 10,
+  "completionPromise": "DONE",
+  "enabled": true,
+  "debug": false
+}

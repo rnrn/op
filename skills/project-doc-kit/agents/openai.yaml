@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Documentation Kit"
+  short_description: "Generate dated project documentation kits"
+  default_prompt: "Generate a dated project documentation kit under docs/YYYYMMDD."

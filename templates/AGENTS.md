@@ -1,0 +1,133 @@
+# Project Agent Rules
+
+Use these rules for all agent-assisted development in this repository. The
+cross-cutting conventions every op-* skill obeys (declared-wins, git boundary,
+autonomy boundary, proof-targets-outcome, verify teeth, resumable state,
+completion protocol, brevity) are stated once in `docs/principles.md` — read it
+once; a skill logs a line only to *deviate*, never to repeat.
+
+## Operating Method
+
+Work contract-first:
+
+1. Capture the User Spec before changing code.
+2. Name the changed Contract.
+3. Identify the Owner subsystem.
+4. Identify the Runtime rung.
+5. Identify the Source of truth.
+6. Define the Proof path before implementation.
+
+Do not start non-trivial implementation while any of these fields are unknown.
+
+## Required Docs
+
+Treat these files as the active project-method scaffold:
+
+- `docs/INDEX.md`
+- `docs/HANDBOOK.md`
+- `docs/task-intake.md`
+- `docs/docs-taxonomy.md`
+- `docs/subsystem-doc-contracts.md`
+- `docs/project-boundaries.md`
+- `docs/build-profiles.md`, or explicit `N/A` rationale for single-surface projects
+- `docs/testing/testing-rules.md` + `docs/testing/e2e-maintenance-guide.md` when the project
+  has a test suite (the suite -> environment -> run-command map, mirror-contract registry,
+  harness gotchas), or explicit `N/A` — op-preflight auto-loads BOTH for every test-touching
+  task once the directory exists; while it is absent that guard is OFF. Add a `testing` row
+  to the `docs/README.md` doc-map so planning-time agents (op-planner) see it too.
+- `docs/feedback/index.md`
+- `docs/feedback/baseline.md`
+- `docs/feedback/process.md`
+
+## Stack Profile
+
+Declare the project's stack once so skills and agents use these values instead of their built-in defaults and examples:
+
+> **Declare `Language(s)` FIRST — leaving it `TODO` silently disables the stack-deviation
+> guard.** With no declared language, `stack-check` / op-preflight / op-watch's accept gate
+> cannot tell an unrequested language from an intended one, and a polyglot spec (e.g. a doc
+> whose reference code is in another language) will quietly pull a model into adding it. An
+> undeclared stack is the single most common reason a model ships code in a language nobody
+> asked for. List the language(s) you actually build in; a non-declared language then requires
+> a recorded, **human-accepted** `### Decision` — a model never self-authorizes its own deviation.
+
+| Field | Value |
+|---|---|
+| Language(s) | TODO — REQUIRED, e.g. `go` (the primary build language; comma-separate only genuinely-used languages) |
+| Project archetype | TODO — service / GUI app / CLI / library / ML pipeline / embedded / mixed |
+| Build command | TODO |
+| Test / proof command | TODO |
+| Docs layout | TODO — e.g. `docs/<track>/epics\|stories` (default) or the actual layout |
+| Task / spec system | TODO or `auto`. One of: BMAD (`docs/<track>/{epics,stories}/`, `prd.md`) · spec-kit (`specs/<feature>/{spec,plan,tasks}.md`, `.specify/`) · beads (`.beads/`, `bd`) · markdown (`docs/tasks/*.md`, `TODO/BACKLOG`) · issues (gh/linear/jira) · none. See `docs/spec-systems.md`. |
+| Spec unit format | TODO or `default` — the file shape a planned unit takes in that system |
+| File-size budget | TODO or `default` (500/1000 lines) |
+| Commit budget | TODO or `default` (300 changed code lines) |
+
+Skills treat their built-in numbers and stack examples as defaults; values declared here win. The **Task / spec system** drives how planning and audit skills create / find / export work units — see `docs/spec-systems.md` for detection and per-system recipes.
+
+## Preflight
+
+Before non-trivial implementation, docs workflow changes, agent behavior changes, runtime/deploy work, or refactors:
+
+1. Read `docs/feedback/index.md`.
+2. Read `docs/feedback/baseline.md`.
+3. Load only the feedback files selected by the index.
+4. Check `docs/HANDBOOK.md`, `docs/project-boundaries.md`, and `docs/build-profiles.md` when the task touches ownership, runtime, packaging, or proof.
+
+## Validation
+
+Every change must end with a concrete proof command or evidence file. If validation is unavailable, record the blocker and do not mark the task complete.
+
+## Ratchet discipline
+
+A size/budget ratchet that never lowers is a one-shot cutoff, not a ratchet: after a
+successful reduction, LOWER the baseline to the new size in the same change (field: a
+225-line file kept a 1719-line ceiling — a full god-file rollback would have passed
+green); new files register in the ratchet automatically, never by memory.
+
+## Git boundary
+
+Skills and agents **write files; they do not stage or commit.** Never run `git add`, `git commit`, or `git reset` from a skill run — staging and commits belong to the user, or to the dedicated `baby-commit` / `dry-commit` skills invoked explicitly. (An agent that auto-commits — common with `--dangerously-skip-permissions` — can corrupt a detached worktree and strand later steps.)
+
+## Verification precedence (self-measurement vs established tools)
+
+When YOUR ad-hoc measurement disagrees with an established project tool, a declared
+validator, or another agent's reported result — **re-verify your own measurement first**,
+before stopping work, rolling back, or raising an alarm. Stops, rollbacks, and alarms are
+destructive actions too; the one-off parser is the least-tested instrument in the room
+(field case: a correct subagent was killed on the strength of a hand-rolled status count
+that the project's own validator would have rejected). Prefer the project's canonical
+helpers over hand-rolled equivalents whenever one exists.
+
+## Autonomy boundary (no invented defaults)
+
+When running without a user present (headless, `--apply`, `--dangerously-skip-permissions`, or a goal/loop driver), **hands-off reduces questions; it does not expand authority.**
+
+- **Never invent a required-but-unspecified value.** A guessed `timeout=30`, batch size, retry count, or path is invented, not safe. Use the value the user stated, the value already in use, or **defer** — do not guess.
+- **Reversibility ladder** — prefer the reversible move: rename-before-delete · add-before-replace · stash-not-reset · branch/worktree-never-main · stop-not-destroy. If unsure whether an action is reversible, assume it is **not**, and defer.
+- **Two-log split** in any checkpoint produced hands-off: a `### Decisions` list (auto-choices that would otherwise have prompted, one line each) and a `### Deferred (needs user input)` list (where no conservative default existed). The deferred list is the agenda for the next user interaction — it is never silently dropped.
+
+## Epic Closure Gate
+
+Before an epic's status flips to DONE, run these **in order** — the steps are a
+sequence, not an unordered set, because drift-check detects what docup fixes:
+
+1. `op-drift-check` scoped to the docs the epic touched — detect divergences.
+2. If it reported CRITICAL/WARNING: `op-docup --epic <id> --apply` to reconcile
+   stories/architecture with the code, then re-run `op-drift-check`. Repeat until
+   it reports no CRITICAL/WARNING (cap ~3 iterations; if still failing, the epic
+   is `BLOCKED` — fix the code/doc divergence, do not close).
+3. `op-decision-memory` **last** — once docs are settled, propose the epic's
+   durable decisions and append accepted ones with `--apply` (recording
+   decisions before docup reconciles the docs risks capturing a stale rationale).
+4. The epic file's `## Closure Checklist` section is fully checked.
+
+An epic without a completed gate stays in `review`, not `done`.
+
+## Review Cadence
+
+| Level | When | Required |
+|---|---|---|
+| Story | every story | narrowest proof command + the project's mechanical gates (build, budget ratchet, lint); no skill runs required |
+| Epic closure | status flips to DONE | the Epic Closure Gate above |
+| Background | monthly or every ~10 closed stories | `op-debt-scan` + `op-drift-check`, to catch hotfixes and work that bypassed epics |

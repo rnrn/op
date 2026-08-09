@@ -1,0 +1,26 @@
+{
+  "name": "op-skills",
+  "version": "0.9.0",
+  "description": "Operational development workflow skills for project intake, planning, preflight, implementation closeout, decision memory, feedback harvesting, and drift/debt audits.",
+  "author": {
+    "name": "rnrn",
+    "url": "https://github.com/rnrn"
+  },
+  "homepage": "https://github.com/rnrn/op#readme",
+  "repository": "https://github.com/rnrn/op",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skills",
+    "development-workflow",
+    "bmad",
+    "preflight",
+    "documentation",
+    "technical-debt",
+    "upstream"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "hooks": "./hooks/"
+}

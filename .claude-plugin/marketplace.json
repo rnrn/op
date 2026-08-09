@@ -1,0 +1,179 @@
+{
+  "name": "op-skills",
+  "owner": {
+    "name": "rnrn",
+    "url": "https://github.com/rnrn"
+  },
+  "metadata": {
+    "description": "A GitHub-installable Claude Code skill marketplace for operational development cycles: onboard, find existing work, plan, preflight, implement, update docs, capture decisions, harvest feedback, and audit drift/debt.",
+    "homepage": "https://github.com/rnrn/op#readme",
+    "repository": "https://github.com/rnrn/op",
+    "license": "MIT"
+  },
+  "plugins": [
+    {
+      "name": "operational-development-cycle",
+      "source": "./",
+      "description": "Daily development lifecycle skills. Install this group when a project needs a repeatable path from task intake to implementation closeout and periodic drift/debt review. Pair with documentation-kits when a full dated project documentation snapshot is needed.",
+      "version": "0.9.0",
+      "author": {
+        "name": "rnrn"
+      },
+      "repository": "https://github.com/rnrn/op",
+      "license": "MIT",
+      "keywords": [
+        "development-workflow",
+        "task-intake",
+        "preflight",
+        "documentation",
+        "decision-log",
+        "feedback",
+        "technical-debt"
+      ],
+      "category": "workflow",
+      "tags": [
+        "op-skills",
+        "bmad",
+        "project-lifecycle",
+        "preflight",
+        "docs",
+        "audit"
+      ],
+      "skills": [
+        "./skills/op-tour",
+        "./skills/op-story-finder",
+        "./skills/op-planner",
+        "./skills/op-preflight",
+        "./skills/op-docup",
+        "./skills/op-decision-memory",
+        "./skills/op-feedback-harvest",
+        "./skills/op-debt-scan",
+        "./skills/op-drift-check",
+        "./skills/op-audit",
+        "./skills/op-debug",
+        "./skills/op-watch",
+        "./skills/op-closeout",
+        "./skills/op-epic-gap"
+      ],
+      "strict": false
+    },
+    {
+      "name": "git-release",
+      "source": "./",
+      "description": "Git and release hygiene skills for dry commit planning, baby-step commits, and changelog maintenance.",
+      "version": "0.9.0",
+      "author": {
+        "name": "rnrn"
+      },
+      "repository": "https://github.com/rnrn/op",
+      "license": "MIT",
+      "keywords": [
+        "git",
+        "commit",
+        "changelog",
+        "release"
+      ],
+      "category": "workflow",
+      "tags": [
+        "git",
+        "release",
+        "commit-planning"
+      ],
+      "skills": [
+        "./skills/baby-commit",
+        "./skills/dry-commit",
+        "./skills/changelog"
+      ],
+      "strict": false
+    },
+    {
+      "name": "upstream-research",
+      "source": "./",
+      "description": "Upstream repository research skills for harvesting commits, issues, pull requests, and cherry-pick candidates into project planning artifacts.",
+      "version": "0.9.0",
+      "author": {
+        "name": "rnrn"
+      },
+      "repository": "https://github.com/rnrn/op",
+      "license": "MIT",
+      "keywords": [
+        "upstream",
+        "github",
+        "issues",
+        "pull-requests",
+        "cherry-pick"
+      ],
+      "category": "research",
+      "tags": [
+        "upstream",
+        "github",
+        "harvest",
+        "integration"
+      ],
+      "skills": [
+        "./skills/upstream-harvest",
+        "./skills/upstream-cherry",
+        "./skills/upstream-issues"
+      ],
+      "strict": false
+    },
+    {
+      "name": "documentation-kits",
+      "source": "./",
+      "description": "Batch documentation snapshot skills for generating dated onboarding, architecture, integration, delivery-map, debt, and optional DOCX project documentation kits.",
+      "version": "0.9.0",
+      "author": {
+        "name": "rnrn"
+      },
+      "repository": "https://github.com/rnrn/op",
+      "license": "MIT",
+      "keywords": [
+        "documentation",
+        "architecture",
+        "onboarding",
+        "mermaid",
+        "docx"
+      ],
+      "category": "documentation",
+      "tags": [
+        "project-docs",
+        "architecture",
+        "onboarding",
+        "docx"
+      ],
+      "skills": [
+        "./skills/project-doc-kit"
+      ],
+      "strict": false
+    },
+    {
+      "name": "ml-downloads",
+      "source": "./",
+      "description": "HuggingFace model/dataset download planning and execution with SOCKS5 proxy rotation, parallel range chunks, and resume support; plan-first, downloads only on --apply.",
+      "version": "0.9.0",
+      "author": {
+        "name": "rnrn"
+      },
+      "repository": "https://github.com/rnrn/op",
+      "license": "MIT",
+      "keywords": [
+        "huggingface",
+        "download",
+        "models",
+        "datasets",
+        "proxy"
+      ],
+      "category": "ml",
+      "tags": [
+        "huggingface",
+        "downloads",
+        "socks5",
+        "resume"
+      ],
+      "skills": [
+        "./skills/hf-download"
+      ],
+      "strict": false
+    }
+  ]
+}
